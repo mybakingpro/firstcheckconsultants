@@ -7,7 +7,7 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -19,7 +19,7 @@
 <body>
 <div id="root"></div>
 
-<script type="text/babel" data-presets="react">
+<script type="text/plain" id="app-src">
 const { useState, useEffect, useMemo } = React;
 
 // ---------------------------------------------------------------------------
@@ -674,6 +674,13 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+<script>
+  // Manually transform the JSX above using the classic runtime (React.createElement),
+  // since this page has no bundler and Babel's auto-detect otherwise assumes ES modules.
+  var __src = document.getElementById("app-src").textContent;
+  var __out = Babel.transform(__src, { presets: [["react", { runtime: "classic" }]] }).code;
+  (0, eval)(__out);
 </script>
 </body>
 </html>
