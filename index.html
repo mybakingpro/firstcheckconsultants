@@ -181,8 +181,262 @@ function Login() {
 // ---------------------------------------------------------------------------
 // Client Portal
 // ---------------------------------------------------------------------------
-function ClientPortal({ client, audits, onToggleResolved }) {
-  const [view, setView] = useState("dashboard");
+function Sparkline({ points, color }) {
+  if (!points.length) return <p className="text-sm" style={{ color: C.inkSoft }}>Not enough data yet.</p>;
+  const w = 240, h = 60, pad = 6;
+  const step = points.length > 1 ? (w - 2 * pad) / (points.length - 1) : 0;
+  const coords = points.map((p, i) => [pad + i * step, h - pad - (p / 100) * (h - 2 * pad)]);
+  const path = coords.map((c, i) => (i === 0 ? "M" : "L") + c[0] + "," + c[1].toFixed(1)).join(" ");
+  return (
+    <svg viewBox={"0 0 " + w + " " + h} className="w-full h-16">
+      <path d={path} fill="none" stroke={color} strokeWidth="2" />
+      {coords.map((c, i) => <circle key={i} cx={c[0]} cy={c[1]} r="3" fill={color} />)}
+    </svg>
+  );
+}
+
+function ClientDashboard({ client, audits, selfAudits, openItems, latest, onToggleResolved }) {
+  const selfSorted = useMemo(() => [...selfAudits].sort((a, b) => (a.date < b.date ? -1 : 1)), [selfAudits]);
+  const passRates = selfSorted.map(sa => {
+    const items = sa.items || [];
+    return items.length ? Math.round((items.filter(i => i.passed).length / items.length) * 100) : null;
+  }).filter(v => v !== null);
+  const latestSelfRate = passRates.length ? passRates[passRates.length - 1] : null;
+
+  const opportunity = useMemo(() => {
+    const counts = {};
+    audits.forEach(a => (a.findings || []).filter(f => !f.resolved).forEach(f => { counts[f.category] = (counts[f.category] || 0) + 1; }));
+    selfAudits.forEach(sa => (sa.items || []).filter(i => !i.passed).forEach(i => { counts[i.category] = (counts[i.category] || 0) + 1; }));
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  }, [audits, selfAudits]);
+  const maxCount = opportunity.length ? opportunity[0][1] : 1;
+
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="rounded p-4" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
+          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>Latest inspection</p>
+          {latest ? <Badge label={latest.grade} {...gradeColor(latest.grade)} /> : <p className="text-sm" style={{ color: C.inkSoft }}>No audits yet</p>}
+        </div>
+        <div className="rounded p-4" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
+          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>Latest self-audit</p>
+          {latestSelfRate !== null ? (
+            <p className="font-serif text-lg" style={{ color: latestSelfRate >= 90 ? C.green : latestSelfRate >= 70 ? C.amber : C.red }}>{latestSelfRate}% pass</p>
+          ) : <p className="text-sm" style={{ color: C.inkSoft }}>None submitted</p>}
+        </div>
+        <div className="rounded p-4" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
+          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>Next scheduled audit</p>
+          <p className="font-serif text-lg" style={{ color: C.ink }}>{client.next_audit ? fmt(client.next_audit) : "Not scheduled"}</p>
+        </div>
+        <div className="rounded p-4" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
+          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>Open action items</p>
+          <p className="font-serif text-lg" style={{ color: openItems.length ? C.amber : C.green }}>{openItems.length} open</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="rounded p-5" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
+          <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Self-audit trend</h3>
+          <Sparkline points={passRates} color={C.teal} />
+          <p className="text-xs mt-2" style={{ color: C.inkSoft }}>{passRates.length ? "Last " + passRates.length + " self-audits, pass rate over time" : "Submit a self-audit to start tracking your trend."}</p>
+        </div>
+        <div className="rounded p-5" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
+          <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Areas of opportunity</h3>
+          {opportunity.length === 0 ? (
+            <p className="text-sm" style={{ color: C.inkSoft }}>No recurring issues found — nice work.</p>
+          ) : (
+            <div className="space-y-2">
+              {opportunity.map(([cat, count]) => (
+                <div key={cat}>
+                  <div className="flex justify-between text-xs mb-1"><span style={{ color: C.ink }}>{cat}</span><span style={{ color: C.inkSoft }}>{count}</span></div>
+                  <div className="h-2 rounded-full" style={{ backgroundColor: C.line }}>
+                    <div className="h-2 rounded-full" style={{ width: (count / maxCount * 100) + "%", backgroundColor: C.amber }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Things to do</h3>
+        {openItems.length === 0 ? (
+          <p className="text-sm rounded p-4" style={{ color: C.inkSoft, backgroundColor: C.panel, border: "1px solid " + C.line }}>Nothing open right now — nice work.</p>
+        ) : (
+          <div className="rounded overflow-hidden" style={{ border: "1px solid " + C.line }}>
+            {openItems.map((item, i) => (
+              <div key={item.id} className="flex items-start gap-3 p-3" style={{ backgroundColor: C.panel, borderTop: i ? "1px solid " + C.line : "none" }}>
+                <button onClick={() => onToggleResolved(item.id, true)} className="mt-0.5 shrink-0">
+                  <span className="w-4 h-4 rounded-sm inline-block" style={{ border: "1.5px solid " + C.inkSoft }} />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <Badge label={item.severity} {...severityColor(item.severity)} />
+                    <span className="text-xs" style={{ color: C.inkSoft }}>{item.category} · from {fmt(item.auditDate)} audit</span>
+                  </div>
+                  <p className="text-sm" style={{ color: C.ink }}>{item.description}</p>
+                </div>
+                <span className="text-xs whitespace-nowrap" style={{ color: C.inkSoft }}>Due {fmt(item.due_date)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SelfAuditFillForm({ onCancel, onSubmit }) {
+  const [submittedBy, setSubmittedBy] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [results, setResults] = useState(() => {
+    const r = {};
+    CHECKLIST.forEach(sec => sec.items.forEach((item, i) => { r[sec.category + "|" + i] = true; }));
+    return r;
+  });
+  const submit = () => {
+    const items = [];
+    CHECKLIST.forEach(sec => sec.items.forEach((item, i) => {
+      items.push({ category: sec.category, item_text: item, passed: results[sec.category + "|" + i] });
+    }));
+    onSubmit({ date, submitted_by: submittedBy, items });
+  };
+  return (
+    <div className="max-w-2xl">
+      <button onClick={onCancel} className="text-sm mb-4" style={{ color: C.teal }}>← Cancel</button>
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <div><FieldLabel>Completed by</FieldLabel><input value={submittedBy} onChange={e => setSubmittedBy(e.target.value)} className={inputCls} style={inputStyle} /></div>
+        <div><FieldLabel>Date</FieldLabel><input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls} style={inputStyle} /></div>
+      </div>
+      {CHECKLIST.map(sec => (
+        <div key={sec.category} className="mb-5">
+          <h4 className="font-serif text-base mb-2" style={{ color: C.teal }}>{sec.category}</h4>
+          <div className="space-y-1">
+            {sec.items.map((item, i) => {
+              const key = sec.category + "|" + i; const pass = results[key];
+              return (
+                <div key={key} className="flex items-center justify-between gap-3 p-2 rounded" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
+                  <span className="text-sm" style={{ color: C.ink }}>{item}</span>
+                  <div className="flex gap-1 shrink-0">
+                    <button onClick={() => setResults(p => ({ ...p, [key]: true }))} className="text-xs px-2 py-1 rounded" style={pass ? { backgroundColor: C.green, color: "#fff" } : { border: "1px solid " + C.line, color: C.inkSoft }}>Pass</button>
+                    <button onClick={() => setResults(p => ({ ...p, [key]: false }))} className="text-xs px-2 py-1 rounded" style={!pass ? { backgroundColor: C.red, color: "#fff" } : { border: "1px solid " + C.line, color: C.inkSoft }}>Fail</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      <button onClick={submit} className="w-full text-sm font-medium py-2.5 rounded text-white" style={{ backgroundColor: C.teal }}>Submit self-audit</button>
+    </div>
+  );
+}
+
+function ClientSelfAudits({ selfAudits, onSubmit, onPrint }) {
+  const [filling, setFilling] = useState(false);
+  const [expanded, setExpanded] = useState(null);
+  const sorted = [...selfAudits].sort((a, b) => (a.date < b.date ? 1 : -1));
+
+  if (filling) {
+    return <SelfAuditFillForm onCancel={() => setFilling(false)} onSubmit={async (p) => { await onSubmit(p); setFilling(false); }} />;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="font-serif text-lg" style={{ color: C.ink }}>Self-audits</h3>
+          <p className="text-sm" style={{ color: C.inkSoft }}>Fill this out digitally, or print a blank copy for your kitchen manager.</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onPrint} className="text-sm font-medium px-4 py-2 rounded" style={{ border: "1px solid " + C.line, color: C.ink }}>Print blank form</button>
+          <button onClick={() => setFilling(true)} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>+ New self-audit</button>
+        </div>
+      </div>
+      {sorted.length === 0 && <p className="text-sm" style={{ color: C.inkSoft }}>No self-audits submitted yet.</p>}
+      <div className="space-y-2">
+        {sorted.map(sa => {
+          const items = sa.items || []; const total = items.length; const passed = items.filter(i => i.passed).length;
+          const rate = total ? Math.round((passed / total) * 100) : 0;
+          return (
+            <div key={sa.id} className="rounded" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
+              <button onClick={() => setExpanded(expanded === sa.id ? null : sa.id)} className="w-full flex items-center justify-between p-4 text-left">
+                <div>
+                  <p className="text-sm font-medium" style={{ color: C.ink }}>{fmt(sa.date)}{sa.submitted_by ? " · " + sa.submitted_by : ""}</p>
+                  <p className="text-xs" style={{ color: C.inkSoft }}>{passed}/{total} passed</p>
+                </div>
+                <Badge label={rate + "% pass"} fg={rate >= 90 ? C.green : rate >= 70 ? C.amber : C.red} bg={rate >= 90 ? C.greenSoft : rate >= 70 ? C.amberSoft : C.redSoft} />
+              </button>
+              {expanded === sa.id && (
+                <div className="px-4 pb-4 space-y-1">
+                  {items.filter(i => !i.passed).length === 0
+                    ? <p className="text-sm" style={{ color: C.green }}>Everything passed.</p>
+                    : items.filter(i => !i.passed).map(i => (
+                      <div key={i.id} className="text-sm flex items-center gap-2" style={{ color: C.ink }}>
+                        <span style={{ color: C.red }}>✕</span><span>{i.item_text}</span>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ResourceList({ resources, section, kindFilter }) {
+  const items = resources.filter(r => r.section === section && (!kindFilter || r.kind === kindFilter));
+  if (items.length === 0) return <p className="text-sm" style={{ color: C.inkSoft }}>Nothing here yet.</p>;
+  return (
+    <div className="space-y-2">
+      {items.map(r => (
+        <a key={r.id} href={r.url} target="_blank" rel="noreferrer" className="block rounded p-3" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
+          <p className="text-sm font-medium" style={{ color: C.ink }}>{r.title}</p>
+          {r.description && <p className="text-xs mt-0.5" style={{ color: C.inkSoft }}>{r.description}</p>}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function ClientEducation({ resources }) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Videos</h3>
+        <ResourceList resources={resources} section="education" kindFilter="video" />
+      </div>
+      <div>
+        <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Guides & documents</h3>
+        <ResourceList resources={resources} section="education" kindFilter="document" />
+      </div>
+    </div>
+  );
+}
+
+function ClientForms({ resources, onFillSelfAudit }) {
+  return (
+    <div className="space-y-6">
+      <div className="rounded p-4 flex items-center justify-between flex-wrap gap-3" style={{ backgroundColor: C.tealSoft, border: "1px solid " + C.line }}>
+        <div>
+          <p className="text-sm font-medium" style={{ color: C.ink }}>Self-assessment checklist</p>
+          <p className="text-xs" style={{ color: C.inkSoft }}>Fill it out online or print a blank copy.</p>
+        </div>
+        <button onClick={onFillSelfAudit} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>Go to self-audits</button>
+      </div>
+      <div>
+        <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Templates & downloads</h3>
+        <ResourceList resources={resources} section="forms" />
+      </div>
+    </div>
+  );
+}
+
+function ClientPortal({ client, audits, selfAudits, resources, onToggleResolved, onSubmitSelfAudit }) {
+  const [tab, setTab] = useState("dashboard");
   const [expanded, setExpanded] = useState(null);
 
   const sorted = useMemo(() => [...audits].sort((a, b) => (a.date < b.date ? 1 : -1)), [audits]);
@@ -197,11 +451,11 @@ function ClientPortal({ client, audits, onToggleResolved }) {
     return <p className="text-sm" style={{ color: C.inkSoft }}>Your account isn't linked to a business yet — ask your consultant to finish setting up your profile.</p>;
   }
 
-  if (view === "print") {
+  if (tab === "print") {
     return (
       <div>
         <div className="no-print flex items-center gap-3 mb-6">
-          <button onClick={() => setView("dashboard")} className="text-sm px-3 py-2 rounded" style={{ color: C.teal }}>← Back to portal</button>
+          <button onClick={() => setTab("selfaudits")} className="text-sm px-3 py-2 rounded" style={{ color: C.teal }}>← Back to portal</button>
           <button onClick={() => window.print()} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>Print form</button>
         </div>
         <div className="max-w-2xl mx-auto rounded p-8" style={{ backgroundColor: "#fff", border: "1px solid " + C.line }}>
@@ -232,98 +486,66 @@ function ClientPortal({ client, audits, onToggleResolved }) {
     );
   }
 
+  const NAV = [["dashboard", "Dashboard"], ["audits", "Audits"], ["selfaudits", "Self-Audits"], ["education", "Education"], ["forms", "Forms"]];
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <p className="text-sm" style={{ color: C.inkSoft }}>{client.type} · {client.package} plan</p>
         <h2 className="font-serif text-2xl mt-1" style={{ color: C.ink }}>Welcome back, {client.name}</h2>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded p-4" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>Latest inspection</p>
-          {latest ? (<><Badge label={latest.grade} {...gradeColor(latest.grade)} /><p className="text-sm mt-2" style={{ color: C.inkSoft }}>{fmt(latest.date)} · score {latest.score}</p></>) : <p className="text-sm" style={{ color: C.inkSoft }}>No audits yet</p>}
-        </div>
-        <div className="rounded p-4" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>Next scheduled audit</p>
-          <p className="font-serif text-lg" style={{ color: C.ink }}>{client.next_audit ? fmt(client.next_audit) : "Not scheduled"}</p>
-        </div>
-        <div className="rounded p-4" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>Open action items</p>
-          <p className="font-serif text-lg" style={{ color: openItems.length ? C.amber : C.green }}>{openItems.length} open</p>
-        </div>
+      <div className="flex gap-2 flex-wrap no-print">
+        {NAV.map(([key, label]) => (
+          <button key={key} onClick={() => setTab(key)} className="text-sm font-medium px-4 py-2 rounded"
+            style={tab === key ? { backgroundColor: C.teal, color: "#fff" } : { backgroundColor: C.panel, color: C.inkSoft, border: "1px solid " + C.line }}>{label}</button>
+        ))}
       </div>
 
-      <div>
-        <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Things to do</h3>
-        {openItems.length === 0 ? (
-          <p className="text-sm rounded p-4" style={{ color: C.inkSoft, backgroundColor: C.panel, border: "1px solid " + C.line }}>Nothing open right now — nice work.</p>
-        ) : (
-          <div className="rounded overflow-hidden" style={{ border: "1px solid " + C.line }}>
-            {openItems.map((item, i) => (
-              <div key={item.id} className="flex items-start gap-3 p-3" style={{ backgroundColor: C.panel, borderTop: i ? "1px solid " + C.line : "none" }}>
-                <button onClick={() => onToggleResolved(item.id, true)} className="mt-0.5 shrink-0">
-                  <span className="w-4 h-4 rounded-sm inline-block" style={{ border: "1.5px solid " + C.inkSoft }} />
-                </button>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <Badge label={item.severity} {...severityColor(item.severity)} />
-                    <span className="text-xs" style={{ color: C.inkSoft }}>{item.category} · from {fmt(item.auditDate)} audit</span>
+      {tab === "dashboard" && <ClientDashboard client={client} audits={audits} selfAudits={selfAudits} openItems={openItems} latest={latest} onToggleResolved={onToggleResolved} />}
+
+      {tab === "audits" && (
+        <div>
+          <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Audit history</h3>
+          <div className="space-y-2">
+            {sorted.map(a => (
+              <div key={a.id} className="rounded" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
+                <button onClick={() => setExpanded(expanded === a.id ? null : a.id)} className="w-full flex items-center justify-between p-4 text-left">
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: C.ink }}>{fmt(a.date)} · {a.type}</p>
+                    <p className="text-xs" style={{ color: C.inkSoft }}>Score {a.score}</p>
                   </div>
-                  <p className="text-sm" style={{ color: C.ink }}>{item.description}</p>
-                </div>
-                <span className="text-xs whitespace-nowrap" style={{ color: C.inkSoft }}>Due {fmt(item.due_date)}</span>
+                  <Badge label={a.grade} {...gradeColor(a.grade)} />
+                </button>
+                {expanded === a.id && (
+                  <div className="px-4 pb-4 space-y-2">
+                    {(a.findings || []).length === 0
+                      ? <p className="text-sm" style={{ color: C.inkSoft }}>No findings recorded for this visit.</p>
+                      : a.findings.map(f => (
+                        <div key={f.id} className="flex items-center gap-2 text-sm" style={{ color: C.ink }}>
+                          <Badge label={f.severity} {...severityColor(f.severity)} /><span>{f.description}</span>{f.resolved && <span style={{ color: C.green }}>✓</span>}
+                        </div>
+                      ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
-        )}
-      </div>
-
-      <div>
-        <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Audit history</h3>
-        <div className="space-y-2">
-          {sorted.map(a => (
-            <div key={a.id} className="rounded" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-              <button onClick={() => setExpanded(expanded === a.id ? null : a.id)} className="w-full flex items-center justify-between p-4 text-left">
-                <div>
-                  <p className="text-sm font-medium" style={{ color: C.ink }}>{fmt(a.date)} · {a.type}</p>
-                  <p className="text-xs" style={{ color: C.inkSoft }}>Score {a.score}</p>
-                </div>
-                <Badge label={a.grade} {...gradeColor(a.grade)} />
-              </button>
-              {expanded === a.id && (
-                <div className="px-4 pb-4 space-y-2">
-                  {(a.findings || []).length === 0
-                    ? <p className="text-sm" style={{ color: C.inkSoft }}>No findings recorded for this visit.</p>
-                    : a.findings.map(f => (
-                      <div key={f.id} className="flex items-center gap-2 text-sm" style={{ color: C.ink }}>
-                        <Badge label={f.severity} {...severityColor(f.severity)} /><span>{f.description}</span>{f.resolved && <span style={{ color: C.green }}>✓</span>}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-          ))}
         </div>
-      </div>
+      )}
 
-      <div className="rounded p-5" style={{ backgroundColor: C.tealSoft, border: "1px solid " + C.line }}>
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h3 className="font-serif text-lg" style={{ color: C.ink }}>Self-assessment form</h3>
-            <p className="text-sm mt-1" style={{ color: C.inkSoft }}>Print this checklist so your kitchen manager can run their own compliance check between visits.</p>
-          </div>
-          <button onClick={() => setView("print")} className="text-sm font-medium px-4 py-2 rounded text-white shrink-0" style={{ backgroundColor: C.teal }}>Open printable form</button>
-        </div>
-      </div>
+      {tab === "selfaudits" && <ClientSelfAudits selfAudits={selfAudits} onSubmit={(p) => onSubmitSelfAudit(client.id, p)} onPrint={() => setTab("print")} />}
+      {tab === "education" && <ClientEducation resources={resources} />}
+      {tab === "forms" && <ClientForms resources={resources} onFillSelfAudit={() => setTab("selfaudits")} />}
     </div>
   );
 }
 
+
 // ---------------------------------------------------------------------------
 // Admin Console
 // ---------------------------------------------------------------------------
-function AdminConsole({ clients, audits, documents, events, onAddClient, onAddAudit, onAddDocument, onAddEvent, onToggleResolved, onCreateClientLogin }) {
+function AdminConsole({ clients, audits, documents, events, resources, selfAudits, onAddClient, onAddAudit, onAddDocument, onAddEvent, onToggleResolved, onCreateClientLogin, onAddResource, onDeleteResource }) {
   const [tab, setTab] = useState("clients");
   const [selectedId, setSelectedId] = useState(null);
   const [clientTab, setClientTab] = useState("overview");
@@ -337,6 +559,7 @@ function AdminConsole({ clients, audits, documents, events, onAddClient, onAddAu
   const selected = clients.find(c => c.id === selectedId);
   const clientAudits = audits.filter(a => a.client_id === selectedId).sort((a, b) => (a.date < b.date ? 1 : -1));
   const clientDocs = documents.filter(d => d.client_id === selectedId);
+  const clientSelfAudits = selfAudits.filter(sa => sa.client_id === selectedId).sort((a, b) => (a.date < b.date ? 1 : -1));
   const clientOpenItems = clientAudits.flatMap(a => (a.findings || []).filter(f => !f.resolved));
 
   const statusDot = (clientId) => {
@@ -357,7 +580,7 @@ function AdminConsole({ clients, audits, documents, events, onAddClient, onAddAu
   return (
     <div>
       <div className="flex items-center gap-2 mb-6">
-        {[["clients", "Clients"], ["calendar", "Calendar"]].map(([key, label]) => (
+        {[["clients", "Clients"], ["calendar", "Calendar"], ["resources", "Resources"]].map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} className="text-sm font-medium px-4 py-2 rounded"
             style={tab === key ? { backgroundColor: C.teal, color: "#fff" } : { backgroundColor: C.panel, color: C.inkSoft, border: "1px solid " + C.line }}>{label}</button>
         ))}
@@ -391,7 +614,7 @@ function AdminConsole({ clients, audits, documents, events, onAddClient, onAddAu
               </div>
 
               <div className="flex gap-2 mb-4 flex-wrap">
-                {[["overview", "Overview"], ["audits", "Audits"], ["documents", "Documents"], ["access", "Client login"]].map(([key, label]) => (
+                {[["overview", "Overview"], ["audits", "Audits"], ["selfaudits", "Self-Audits"], ["documents", "Documents"], ["access", "Client login"]].map(([key, label]) => (
                   <button key={key} onClick={() => setClientTab(key)} className="text-xs font-medium px-3 py-1.5 rounded"
                     style={clientTab === key ? { backgroundColor: C.ink, color: "#fff" } : { backgroundColor: "#fff", color: C.inkSoft, border: "1px solid " + C.line }}>{label}</button>
                 ))}
@@ -433,6 +656,34 @@ function AdminConsole({ clients, audits, documents, events, onAddClient, onAddAu
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {clientTab === "selfaudits" && (
+                <div className="space-y-2">
+                  {clientSelfAudits.length === 0 && <p className="text-sm" style={{ color: C.inkSoft }}>No self-audits submitted by this client yet.</p>}
+                  {clientSelfAudits.map(sa => {
+                    const items = sa.items || []; const total = items.length; const passed = items.filter(i => i.passed).length;
+                    const rate = total ? Math.round((passed / total) * 100) : 0;
+                    const fails = items.filter(i => !i.passed);
+                    return (
+                      <div key={sa.id} className="rounded p-3" style={{ backgroundColor: "#fff", border: "1px solid " + C.line }}>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-sm font-medium" style={{ color: C.ink }}>{fmt(sa.date)}{sa.submitted_by ? " · " + sa.submitted_by : ""}</p>
+                          <Badge label={rate + "% pass"} fg={rate >= 90 ? C.green : rate >= 70 ? C.amber : C.red} bg={rate >= 90 ? C.greenSoft : rate >= 70 ? C.amberSoft : C.redSoft} />
+                        </div>
+                        {fails.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {fails.map(f => (
+                              <div key={f.id} className="text-xs flex items-center gap-2" style={{ color: C.ink }}>
+                                <span style={{ color: C.red }}>✕</span><span>{f.item_text}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
@@ -491,6 +742,33 @@ function AdminConsole({ clients, audits, documents, events, onAddClient, onAddAu
         </div>
       )}
 
+      {tab === "resources" && (
+        <div className="rounded p-5" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-serif text-lg" style={{ color: C.ink }}>Education & Forms library</h3>
+            <button onClick={() => setModal({ type: "addResource" })} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>+ Add resource</button>
+          </div>
+          {[["education", "Education"], ["forms", "Forms"]].map(([sec, label]) => (
+            <div key={sec} className="mb-6">
+              <p className="text-xs uppercase tracking-[0.15em] mb-2" style={{ color: C.inkSoft }}>{label}</p>
+              <div className="space-y-2">
+                {resources.filter(r => r.section === sec).length === 0 && <p className="text-sm" style={{ color: C.inkSoft }}>Nothing added yet.</p>}
+                {resources.filter(r => r.section === sec).map(r => (
+                  <div key={r.id} className="flex items-center justify-between gap-3 rounded p-3" style={{ backgroundColor: "#fff", border: "1px solid " + C.line }}>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate" style={{ color: C.ink }}>{r.title} <span className="text-xs font-normal" style={{ color: C.inkSoft }}>· {r.kind}</span></p>
+                      {r.description && <p className="text-xs truncate" style={{ color: C.inkSoft }}>{r.description}</p>}
+                    </div>
+                    <button onClick={() => onDeleteResource(r.id)} className="text-xs px-2 py-1 rounded shrink-0" style={{ border: "1px solid " + C.line, color: C.inkSoft }}>Remove</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {modal?.type === "addResource" && <AddResourceModal onClose={() => setModal(null)} onSubmit={p => { onAddResource(p); setModal(null); }} />}
       {modal?.type === "addClient" && <AddClientModal onClose={() => setModal(null)} onSubmit={p => { onAddClient(p); setModal(null); }} />}
       {modal?.type === "addAudit" && <AddAuditModal onClose={() => setModal(null)} onSubmit={p => { onAddAudit(modal.clientId, p); setModal(null); }} />}
       {modal?.type === "addDocument" && <AddDocumentModal onClose={() => setModal(null)} onSubmit={p => { onAddDocument(modal.clientId, p); setModal(null); }} />}
@@ -516,6 +794,23 @@ function ClientLoginPanel({ client, onCreateClientLogin }) {
       <button onClick={submit} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>Create login</button>
       {status && <p className="text-sm mt-2" style={{ color: C.inkSoft }}>{status}</p>}
     </div>
+  );
+}
+
+function AddResourceModal({ onClose, onSubmit }) {
+  const [title, setTitle] = useState(""); const [description, setDescription] = useState("");
+  const [section, setSection] = useState("education"); const [kind, setKind] = useState("document"); const [url, setUrl] = useState("");
+  return (
+    <Modal title="Add resource" onClose={onClose}>
+      <div className="mb-3"><FieldLabel>Title</FieldLabel><input value={title} onChange={e => setTitle(e.target.value)} className={inputCls} style={inputStyle} /></div>
+      <div className="mb-3"><FieldLabel>Description (optional)</FieldLabel><input value={description} onChange={e => setDescription(e.target.value)} className={inputCls} style={inputStyle} /></div>
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div><FieldLabel>Area</FieldLabel><select value={section} onChange={e => setSection(e.target.value)} className={inputCls} style={inputStyle}><option value="education">Education</option><option value="forms">Forms</option></select></div>
+        <div><FieldLabel>Type</FieldLabel><select value={kind} onChange={e => setKind(e.target.value)} className={inputCls} style={inputStyle}><option value="document">Document</option><option value="video">Video</option></select></div>
+      </div>
+      <div className="mb-4"><FieldLabel>Link (video URL, or link to the document/template)</FieldLabel><input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://…" className={inputCls} style={inputStyle} /></div>
+      <button onClick={() => title && url && onSubmit({ title, description, section, kind, url })} className="w-full text-sm font-medium py-2 rounded text-white" style={{ backgroundColor: C.teal }}>Save resource</button>
+    </Modal>
   );
 }
 
@@ -600,6 +895,8 @@ function App() {
   const [audits, setAudits] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [events, setEvents] = useState([]);
+  const [resources, setResources] = useState([]);
+  const [selfAudits, setSelfAudits] = useState([]);
 
   useEffect(() => {
     sb.auth.getSession().then(({ data }) => setSession(data.session));
@@ -614,13 +911,15 @@ function App() {
   }, [session]);
 
   const refreshAll = async () => {
-    const [{ data: c }, { data: a }, { data: d }, { data: e }] = await Promise.all([
+    const [{ data: c }, { data: a }, { data: d }, { data: e }, { data: r }, { data: s }] = await Promise.all([
       sb.from("clients").select("*").order("name"),
       sb.from("audits").select("*, findings(*)").order("date", { ascending: false }),
       sb.from("documents").select("*").order("date", { ascending: false }),
       sb.from("calendar_events").select("*, clients(name)").order("date"),
+      sb.from("resources").select("*").order("created_at", { ascending: false }),
+      sb.from("self_audits").select("*, items:self_audit_items(*)").order("date", { ascending: false }),
     ]);
-    setClients(c || []); setAudits(a || []); setDocuments(d || []); setEvents(e || []);
+    setClients(c || []); setAudits(a || []); setDocuments(d || []); setEvents(e || []); setResources(r || []); setSelfAudits(s || []);
   };
 
   useEffect(() => { if (profile) refreshAll(); }, [profile]);
@@ -642,6 +941,14 @@ function App() {
   };
   const addDocument = async (clientId, payload) => { await sb.from("documents").insert({ ...payload, client_id: clientId }); refreshAll(); };
   const addEvent = async (payload) => { await sb.from("calendar_events").insert(payload); refreshAll(); };
+  const addResource = async (payload) => { await sb.from("resources").insert(payload); refreshAll(); };
+  const deleteResource = async (id) => { await sb.from("resources").delete().eq("id", id); refreshAll(); };
+  const submitSelfAudit = async (clientId, payload) => {
+    const { items, ...fields } = payload;
+    const { data: sa } = await sb.from("self_audits").insert({ ...fields, client_id: clientId }).select().single();
+    if (sa && items.length) await sb.from("self_audit_items").insert(items.map(i => ({ ...i, self_audit_id: sa.id })));
+    refreshAll();
+  };
   const createClientLogin = async (clientId, email, password, fullName) => {
     const token = session.access_token;
     const res = await fetch(EDGE_FN_URL, {
@@ -654,6 +961,7 @@ function App() {
 
   const myClient = profile.role === "client" ? clients.find(c => c.id === profile.client_id) : null;
   const myAudits = profile.role === "client" ? audits.filter(a => a.client_id === profile.client_id) : [];
+  const mySelfAudits = profile.role === "client" ? selfAudits.filter(sa => sa.client_id === profile.client_id) : [];
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: C.paper }}>
@@ -661,12 +969,13 @@ function App() {
         <Header role={profile.role} fullName={profile.full_name} onLogout={() => sb.auth.signOut()} />
         {profile.role === "admin" ? (
           <AdminConsole
-            clients={clients} audits={audits} documents={documents} events={events}
+            clients={clients} audits={audits} documents={documents} events={events} resources={resources} selfAudits={selfAudits}
             onAddClient={addClient} onAddAudit={addAudit} onAddDocument={addDocument}
             onAddEvent={addEvent} onToggleResolved={toggleResolved} onCreateClientLogin={createClientLogin}
+            onAddResource={addResource} onDeleteResource={deleteResource}
           />
         ) : (
-          <ClientPortal client={myClient} audits={myAudits} onToggleResolved={toggleResolved} />
+          <ClientPortal client={myClient} audits={myAudits} selfAudits={mySelfAudits} resources={resources} onToggleResolved={toggleResolved} onSubmitSelfAudit={submitSelfAudit} />
         )}
       </div>
     </div>
