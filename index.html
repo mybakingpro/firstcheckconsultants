@@ -20,7 +20,7 @@
 <div id="root"></div>
 
 <script type="text/plain" id="app-src">
-const { useState, useEffect, useMemo, useRef } = React;
+const { useState, useEffect, useMemo } = React;
 
 // ---------------------------------------------------------------------------
 // Supabase connection
@@ -93,576 +93,6 @@ const CHECKLIST = [
 ];
 
 // ---------------------------------------------------------------------------
-// Translations
-// ---------------------------------------------------------------------------
-// UI: static interface labels, keyed by short id.
-// VALS: canonical English data values (stored in the database, e.g. checklist
-// text, grades, severities) mapped to Spanish for display only — the
-// underlying stored data always stays in English so nothing breaks if the
-// language is switched later or data is viewed directly in Supabase.
-const UI = {
-  admin: { en: "Admin", es: "Administrador" },
-  client: { en: "Client", es: "Cliente" },
-  logout: { en: "Log out", es: "Cerrar sesión" },
-  tagline: { en: "Audit. Comply. Improve.", es: "Audita. Cumple. Mejora." },
-  email: { en: "Email", es: "Correo electrónico" },
-  password: { en: "Password", es: "Contraseña" },
-  signIn: { en: "Sign in", es: "Iniciar sesión" },
-  signingIn: { en: "Signing in…", es: "Iniciando sesión…" },
-  loadingAccount: { en: "Loading your account…", es: "Cargando tu cuenta…" },
-  noClientLinked: { en: "Your account isn't linked to a business yet — ask your consultant to finish setting up your profile.", es: "Tu cuenta aún no está vinculada a un negocio — pídele a tu consultor que termine de configurar tu perfil." },
-  welcomeBack: { en: "Welcome back,", es: "Bienvenido de nuevo," },
-  plan: { en: "plan", es: "plan" },
-  navDashboard: { en: "Dashboard", es: "Panel" },
-  navAudits: { en: "Audits", es: "Auditorías" },
-  navSelfAudits: { en: "Self-Audits", es: "Autoevaluaciones" },
-  navEducation: { en: "Education", es: "Educación" },
-  navForms: { en: "Forms", es: "Formularios" },
-  latestInspection: { en: "Latest inspection", es: "Última inspección" },
-  latestSelfAudit: { en: "Latest self-audit", es: "Última autoevaluación" },
-  noAuditsYet: { en: "No audits yet", es: "Aún no hay auditorías" },
-  noneSubmitted: { en: "None submitted", es: "Ninguna enviada" },
-  nextScheduledAudit: { en: "Next scheduled audit", es: "Próxima auditoría programada" },
-  notScheduled: { en: "Not scheduled", es: "No programada" },
-  openActionItems: { en: "Open action items", es: "Pendientes abiertos" },
-  open: { en: "open", es: "abiertos" },
-  selfAuditTrend: { en: "Self-audit trend", es: "Tendencia de autoevaluación" },
-  trendCaption: { en: "Last {n} self-audits, pass rate over time", es: "Últimas {n} autoevaluaciones, porcentaje aprobado en el tiempo" },
-  trendEmpty: { en: "Submit a self-audit to start tracking your trend.", es: "Envía una autoevaluación para comenzar a ver tu tendencia." },
-  notEnoughData: { en: "Not enough data yet.", es: "Aún no hay suficientes datos." },
-  areasOfOpportunity: { en: "Areas of opportunity", es: "Áreas de oportunidad" },
-  noRecurringIssues: { en: "No recurring issues found — nice work.", es: "No se encontraron problemas recurrentes — buen trabajo." },
-  thingsToDo: { en: "Things to do", es: "Pendientes" },
-  nothingOpen: { en: "Nothing open right now — nice work.", es: "No hay pendientes ahora mismo — buen trabajo." },
-  auditHistory: { en: "Audit history", es: "Historial de auditorías" },
-  noFindings: { en: "No findings recorded for this visit.", es: "No se registraron hallazgos en esta visita." },
-  score: { en: "Score", es: "Puntaje" },
-  from: { en: "from", es: "de la auditoría del" },
-  auditWord: { en: "audit", es: "" },
-  due: { en: "Due", es: "Vence" },
-  selfAudits: { en: "Self-audits", es: "Autoevaluaciones" },
-  selfAuditsDesc: { en: "Fill this out digitally, or print a blank copy for your kitchen manager.", es: "Complétalo digitalmente, o imprime una copia en blanco para tu gerente de cocina." },
-  printBlankForm: { en: "Print blank form", es: "Imprimir formulario en blanco" },
-  newSelfAudit: { en: "+ New self-audit", es: "+ Nueva autoevaluación" },
-  noSelfAudits: { en: "No self-audits submitted yet.", es: "Aún no se han enviado autoevaluaciones." },
-  passed: { en: "passed", es: "aprobados" },
-  everythingPassed: { en: "Everything passed.", es: "Todo aprobado." },
-  passPct: { en: "% pass", es: "% aprobado" },
-  cancel: { en: "← Cancel", es: "← Cancelar" },
-  completedBy: { en: "Completed by", es: "Completado por" },
-  date: { en: "Date", es: "Fecha" },
-  pass: { en: "Pass", es: "Aprobado" },
-  fail: { en: "Fail", es: "Reprobado" },
-  submitSelfAudit: { en: "Submit self-audit", es: "Enviar autoevaluación" },
-  videos: { en: "Videos", es: "Videos" },
-  guidesDocs: { en: "Guides & documents", es: "Guías y documentos" },
-  nothingHere: { en: "Nothing here yet.", es: "Aún no hay nada aquí." },
-  selfAssessmentChecklist: { en: "Self-assessment checklist", es: "Lista de autoevaluación" },
-  fillOnlineOrPrint: { en: "Fill it out online or print a blank copy.", es: "Complétalo en línea o imprime una copia en blanco." },
-  goToSelfAudits: { en: "Go to self-audits", es: "Ir a autoevaluaciones" },
-  templatesDownloads: { en: "Templates & downloads", es: "Plantillas y descargas" },
-  completedByBlank: { en: "Completed by: ____________________", es: "Completado por: ____________________" },
-  dateBlank: { en: "Date: ____________________", es: "Fecha: ____________________" },
-  printForm: { en: "Print form", es: "Imprimir formulario" },
-  backToPortal: { en: "← Back to portal", es: "← Volver al portal" },
-  previewingAs: { en: "Previewing as", es: "Vista previa como" },
-  previewingDesc: { en: "— this is exactly what they see when they log in.", es: "— esto es exactamente lo que ven al iniciar sesión." },
-  exitPreview: { en: "Exit preview", es: "Salir de la vista previa" },
-  previewAsClient: { en: "Preview as client", es: "Vista previa como cliente" },
-  // Admin
-  navClients: { en: "Clients", es: "Clientes" },
-  navCalendar: { en: "Calendar", es: "Calendario" },
-  navResources: { en: "Resources", es: "Recursos" },
-  newClient: { en: "+ New client", es: "+ Nuevo cliente" },
-  searchClients: { en: "Search clients", es: "Buscar clientes" },
-  noClientsYet: { en: "No clients yet. Click \"+ New client\" to add your first one.", es: "Aún no hay clientes. Haz clic en \"+ Nuevo cliente\" para agregar el primero." },
-  tabOverview: { en: "Overview", es: "Resumen" },
-  tabAudits: { en: "Audits", es: "Auditorías" },
-  tabSelfAudits: { en: "Self-Audits", es: "Autoevaluaciones" },
-  tabDocuments: { en: "Documents", es: "Documentos" },
-  tabAccess: { en: "Client login", es: "Acceso del cliente" },
-  lastGrade: { en: "Last grade", es: "Última calificación" },
-  openItems: { en: "Open items", es: "Pendientes abiertos" },
-  nextAudit: { en: "Next audit", es: "Próxima auditoría" },
-  uploadNewAudit: { en: "+ Upload new audit", es: "+ Subir nueva auditoría" },
-  uploadDocument: { en: "+ Upload document", es: "+ Subir documento" },
-  noDocumentsYet: { en: "No documents yet.", es: "Aún no hay documentos." },
-  noSelfAuditsClient: { en: "No self-audits submitted by this client yet.", es: "Este cliente aún no ha enviado autoevaluaciones." },
-  addedOn: { en: "added", es: "agregado" },
-  createLoginDesc: { en: "Create a login so {name} can access their own portal.", es: "Crea un acceso para que {name} pueda entrar a su propio portal." },
-  clientEmail: { en: "Client email", es: "Correo del cliente" },
-  tempPassword: { en: "Temporary password", es: "Contraseña temporal" },
-  createLogin: { en: "Create login", es: "Crear acceso" },
-  creating: { en: "Creating…", es: "Creando…" },
-  loginCreated: { en: "Login created. Share these credentials with the client.", es: "Acceso creado. Comparte estas credenciales con el cliente." },
-  errorPrefix: { en: "Error:", es: "Error:" },
-  addResource: { en: "+ Add resource", es: "+ Agregar recurso" },
-  educationFormsLibrary: { en: "Education & Forms library", es: "Biblioteca de educación y formularios" },
-  nothingAddedYet: { en: "Nothing added yet.", es: "Aún no se ha agregado nada." },
-  remove: { en: "Remove", es: "Quitar" },
-  // Modals
-  addNewClient: { en: "Add new client", es: "Agregar nuevo cliente" },
-  businessName: { en: "Business name", es: "Nombre del negocio" },
-  type: { en: "Type", es: "Tipo" },
-  package: { en: "Package", es: "Paquete" },
-  contactField: { en: "Contact (name · email)", es: "Contacto (nombre · correo)" },
-  nextAuditOptional: { en: "Next audit date (optional)", es: "Fecha de próxima auditoría (opcional)" },
-  saveClient: { en: "Save client", es: "Guardar cliente" },
-  uploadNewAuditTitle: { en: "Upload new audit", es: "Subir nueva auditoría" },
-  findingsLabel: { en: "Findings (one per line, leave blank if none)", es: "Hallazgos (uno por línea, dejar en blanco si no hay)" },
-  findingsSeverity: { en: "Findings severity", es: "Gravedad de los hallazgos" },
-  findingsDueDate: { en: "Findings due date", es: "Fecha límite de los hallazgos" },
-  saveAudit: { en: "Save audit", es: "Guardar auditoría" },
-  uploadDocumentTitle: { en: "Upload document", es: "Subir documento" },
-  documentName: { en: "Document name", es: "Nombre del documento" },
-  saveDocument: { en: "Save document", es: "Guardar documento" },
-  scheduleAudit: { en: "Schedule audit —", es: "Programar auditoría —" },
-  client_: { en: "Client", es: "Cliente" },
-  note: { en: "Note", es: "Nota" },
-  addToCalendar: { en: "Add to calendar", es: "Agregar al calendario" },
-  addResourceTitle: { en: "Add resource", es: "Agregar recurso" },
-  title: { en: "Title", es: "Título" },
-  descriptionOptional: { en: "Description (optional)", es: "Descripción (opcional)" },
-  area: { en: "Area", es: "Área" },
-  linkField: { en: "Link (video URL, or link to the document/template)", es: "Enlace (URL del video, o enlace al documento/plantilla)" },
-  saveResource: { en: "Save resource", es: "Guardar recurso" },
-};
-
-const VALS = {
-  // Client type
-  "Restaurant": "Restaurante", "Food Truck": "Camión de comida", "Bakery": "Panadería", "Catering": "Banquetes", "Other": "Otro",
-  // Package
-  "Basic": "Básico", "Pro": "Pro", "Enterprise": "Empresarial",
-  // Audit type
-  "Routine": "Rutinaria", "Follow-up": "Seguimiento", "Complaint response": "Respuesta a queja",
-  // Grade
-  "Pass": "Aprobado", "Conditional Pass": "Aprobado condicional", "Fail": "Reprobado",
-  // Severity
-  "Critical": "Crítica", "Major": "Mayor", "Minor": "Menor",
-  // Resource kind
-  "document": "documento", "video": "video", "Document": "Documento", "Video": "Video",
-  "Certificate": "Certificado", "Permit": "Permiso", "Report": "Reporte", "Log": "Registro",
-  // Checklist categories
-  "Personal Hygiene & Health": "Higiene personal y salud",
-  "Time & Temperature Control": "Control de tiempo y temperatura",
-  "Cross-Contamination Prevention": "Prevención de contaminación cruzada",
-  "Cleaning & Sanitizing": "Limpieza y desinfección",
-  "Pest Control": "Control de plagas",
-  "Allergen Management": "Manejo de alérgenos",
-  "Documentation & Recordkeeping": "Documentación y registros",
-  "General": "General",
-  // Checklist items
-  "Hands washed before starting work, after breaks, and after handling raw food": "Se lavan las manos antes de empezar a trabajar, después de los descansos y después de manipular alimentos crudos",
-  "Handwashing sink stocked with soap, paper towels, and warm water": "El lavamanos está abastecido con jabón, toallas de papel y agua tibia",
-  "Cuts or wounds covered with a bandage and glove": "Cortadas o heridas cubiertas con vendaje y guante",
-  "No hand jewelry other than a plain band": "Sin joyería en las manos, excepto un anillo liso",
-  "Staff showing signs of illness excluded from food handling": "El personal con síntomas de enfermedad no manipula alimentos",
-  "Hair restraints worn in food prep areas": "Se usa cofia o redecilla en las áreas de preparación de alimentos",
-  "Refrigerators hold at 41°F (5°C) or below": "Los refrigeradores mantienen 41°F (5°C) o menos",
-  "Freezers hold at 0°F (-18°C) or below": "Los congeladores mantienen 0°F (-18°C) o menos",
-  "Hot-held food maintained at 135°F (57°C) or above": "Los alimentos calientes se mantienen a 135°F (57°C) o más",
-  "Cooking temperatures verified with a calibrated thermometer": "Las temperaturas de cocción se verifican con un termómetro calibrado",
-  "Cooling: 135°F to 70°F within 2 hours, then to 41°F within 4 more hours": "Enfriamiento: de 135°F a 70°F en 2 horas, luego a 41°F en 4 horas más",
-  "Thermometers calibrated on a regular schedule": "Los termómetros se calibran con regularidad",
-  "Raw meat, poultry, and seafood stored below ready-to-eat food": "Carne cruda, aves y mariscos almacenados debajo de los alimentos listos para comer",
-  "Separate cutting boards and utensils for raw vs. ready-to-eat items": "Tablas de cortar y utensilios separados para alimentos crudos y listos para comer",
-  "Food stored covered and labeled with prep date": "Alimentos almacenados tapados y etiquetados con la fecha de preparación",
-  "Gloves changed between tasks and after handling raw protein": "Los guantes se cambian entre tareas y después de manipular proteína cruda",
-  "Wiping cloths stored separately from food-contact surfaces": "Los paños de limpieza se guardan separados de las superficies en contacto con alimentos",
-  "Sanitizer concentration checked with test strips": "La concentración del sanitizante se verifica con tiras de prueba",
-  "Food-contact surfaces cleaned and sanitized between uses": "Las superficies en contacto con alimentos se limpian y desinfectan entre usos",
-  "Dish machine reaches required wash/rinse/sanitize temperatures": "El lavavajillas alcanza las temperaturas requeridas de lavado/enjuague/desinfección",
-  "Posted cleaning schedule followed for floors, walls, equipment": "Se sigue el horario de limpieza publicado para pisos, paredes y equipo",
-  "Wiping cloths stored in sanitizer solution when not in use": "Los paños de limpieza se guardan en solución sanitizante cuando no se usan",
-  "No signs of pests (droppings, gnaw marks, live or dead insects)": "Sin señales de plagas (excremento, marcas de mordidas, insectos vivos o muertos)",
-  "Doors, windows, and vents sealed against entry points": "Puertas, ventanas y ventilaciones selladas contra puntos de entrada",
-  "Trash stored in covered containers and removed regularly": "La basura se guarda en contenedores tapados y se retira con regularidad",
-  "Pest control service records current and on file": "Los registros del servicio de control de plagas están vigentes y archivados",
-  "Common allergens identified for each menu item": "Se identifican los alérgenos comunes de cada platillo del menú",
-  "Staff able to answer allergen questions accurately": "El personal puede responder correctamente preguntas sobre alérgenos",
-  "Separate prep area or equipment used for allergen-free orders on request": "Se usa un área o equipo de preparación separado para pedidos sin alérgenos cuando se solicita",
-  "Ingredient labels retained and available for review": "Las etiquetas de ingredientes se conservan y están disponibles para revisión",
-  "Temperature logs completed daily": "Los registros de temperatura se completan diariamente",
-  "Food safety manager certification posted and current": "La certificación del gerente de seguridad alimentaria está publicada y vigente",
-  "Corrective action log kept for out-of-range readings": "Se mantiene un registro de acciones correctivas para lecturas fuera de rango",
-  "Most recent inspection report and corrective actions on file": "El reporte de inspección más reciente y las acciones correctivas están archivados",
-};
-
-const LangContext = React.createContext({ lang: "en", t: (k) => k, tv: (s) => s, setLang: () => {} });
-function useLang() { return React.useContext(LangContext); }
-
-// ---------------------------------------------------------------------------
-// Official on-site audit templates (transcribed from FirstCheck's real forms)
-// ---------------------------------------------------------------------------
-const AUDIT_TEMPLATES = {
-  compliance: {
-    key: "compliance",
-    formTitle: "Food Safety & Compliance Audit Checklist",
-    statusOptions: ["C", "NC", "NA", "OBS"],
-    statusLabels: { C: "Compliant", NC: "Non-Compliant", NA: "Not Applicable", OBS: "Observation" },
-    headerFields: [
-      { key: "business", label: "Business / Establishment" },
-      { key: "license", label: "License #" },
-      { key: "address", label: "Address" },
-      { key: "auditDate", label: "Audit Date", type: "date" },
-      { key: "auditor", label: "Auditor" },
-      { key: "managerPic", label: "Manager / PIC" },
-      { key: "auditType", label: "Audit Type", type: "select", options: ["Initial / First Inspection", "Weekly", "Monthly", "Follow-Up", "Other"] },
-      { key: "revisitDate", label: "Revisit Date", type: "date" },
-    ],
-    sections: [
-      { title: "1. Licensing, Permits & Inspection Readiness", items: [
-        "Current food service license/permit is available and posted as required.",
-        "Business name, address and operating information match licensing records.",
-        "Required local approvals/Certificate of Occupancy are available when applicable.",
-        "Latest official inspection report is available on site and corrective actions are documented.",
-        "Approved plans/menu are available when required for the establishment.",
-        "Required consumer advisories/signage are posted and current.",
-        "Required food manager certification is current and documentation is available.",
-        "Employee food safety/handler training records are available as applicable.",
-        "Required written procedures (illness reporting, cleanup of vomit/diarrhea, time as public health control, HACCP/AOP when applicable) are available.",
-        "Licenses, permits and certificates have been reviewed for expiration dates.",
-      ]},
-      { title: "2. Employee Health, Hygiene & Handwashing", items: [
-        "Employees are free from symptoms/conditions requiring restriction or exclusion under applicable requirements.",
-        "Employees know their responsibility to report foodborne-illness symptoms and diagnoses.",
-        "Handwashing sinks are accessible, supplied, and used only for handwashing.",
-        "Hot and cold running water is available at required handwashing sinks.",
-        "Soap is provided at handwashing sinks.",
-        "Single-use paper towels or approved hand-drying equipment is provided.",
-        "Handwashing signage is posted where required.",
-        "Employees wash hands at required times and for an appropriate duration.",
-        "No bare-hand contact with ready-to-eat food unless an approved procedure applies.",
-        "Hair restraints/other hygiene controls are used where required.",
-        "Clean clothing/aprons and appropriate personal hygiene are maintained.",
-        "Food, drinks, tobacco/vaping products and personal items are kept out of food preparation areas.",
-      ]},
-      { title: "3. Food Receiving, Sources & Storage", items: [
-        "Food is obtained from approved/legal sources.",
-        "Receiving practices protect food from contamination and temperature abuse.",
-        "Cold TCS foods are maintained at 41°F or below unless an approved alternative applies.",
-        "Hot TCS foods are maintained at 135°F or above unless an approved alternative applies.",
-        "Frozen foods are received/stored frozen and show no evidence of thawing/refreezing abuse.",
-        "Raw animal foods are stored to prevent contamination of ready-to-eat foods.",
-        "Food is protected from splash, dust, chemicals, pests and other contamination.",
-        "Food is stored at least 6 inches off the floor where required.",
-        "Food containers are clean, intact, covered/closed when appropriate, and food-grade.",
-        "Date marking/labeling is used correctly where required.",
-        "FIFO/FEFO rotation is practiced and expired/spoiled food is removed.",
-        "Prepared/packaged foods have required identity/date/business information when applicable.",
-      ]},
-      { title: "4. Temperature Control & Food Preparation", items: [
-        "Calibrated probe thermometer is available, clean and functional.",
-        "Thermometer accuracy/calibration is documented according to the operation's procedure.",
-        "Cooking temperatures are monitored and recorded when required by the operation.",
-        "Safe cooking temperatures are achieved for applicable foods.",
-        "Reheating for hot holding reaches the required temperature/time.",
-        "Cooling procedures are followed and documented when required.",
-        "Food is cooled using effective methods and shallow containers/ice baths/etc. as appropriate.",
-        "Time as a public health control is used only with an approved written procedure when applicable.",
-        "Time-marking and discard rules are followed when using time as a public health control.",
-        "TCS foods are not left at unsafe temperatures during preparation or service.",
-        "Food is protected from cross-contamination during preparation.",
-        "Raw and ready-to-eat foods are separated by storage, equipment, utensils and work practices.",
-        "Produce is washed/handled appropriately when required.",
-        "Thawing is performed by an approved method.",
-        "Food-contact utensils are protected and replaced/cleaned as needed.",
-      ]},
-      { title: "5. Food Contact Surfaces, Utensils & Equipment", items: [
-        "Food-contact surfaces are smooth, durable, cleanable and in good repair.",
-        "Food-contact surfaces are clean to sight and touch.",
-        "Equipment is cleaned at the required frequency.",
-        "Manual warewashing uses the correct wash-rinse-sanitize-air dry sequence when applicable.",
-        "Mechanical warewashing equipment is operating correctly and monitored as required.",
-        "Sanitizer concentration is tested with the appropriate test kit.",
-        "Sanitizer solution is maintained at the required concentration and changed when needed.",
-        "Wiping cloths are stored in sanitizer solution when required and solution is properly maintained.",
-        "Utensils are stored to prevent contamination.",
-        "Ice machines/scoops and other ice-contact equipment are clean and protected.",
-        "Cutting boards, slicers and other high-use food-contact equipment are free of buildup, cracks and damage.",
-        "Equipment is installed/maintained to permit cleaning and prevent contamination.",
-        "Refrigeration/freezer equipment is clean, functional and equipped/monitored with thermometers as required.",
-      ]},
-      { title: "6. Facility, Plumbing, Water & Restrooms", items: [
-        "Floors, walls and ceilings are clean, smooth/easily cleanable where required, and in good repair.",
-        "Areas around/under equipment are accessible for cleaning and free of excessive debris.",
-        "Lighting is adequate and bulbs are shielded/protected where required.",
-        "Ventilation/hood systems are clean and functioning appropriately.",
-        "Plumbing fixtures, drains and backflow-prevention devices are in good repair.",
-        "Potable water is available from an approved source.",
-        "Hot water is adequate for the operation.",
-        "Grease, wastewater and sewage are disposed of properly.",
-        "Restrooms are clean, supplied and accessible as required.",
-        "Restroom handwashing facilities have required water, soap and drying supplies.",
-        "Doors/entrances and openings are maintained to reduce pest entry where applicable.",
-        "Garbage/dumpsters are covered, clean, leak-free and located/maintained appropriately.",
-        "Mops, brooms and cleaning tools are stored to allow proper drying and prevent contamination.",
-      ]},
-      { title: "7. Chemicals, Toxic Materials & Pest Control", items: [
-        "Chemicals are labeled with common identity/name.",
-        "Chemicals are stored away from food, food-contact surfaces and clean utensils.",
-        "Only approved chemicals are used for their intended purpose.",
-        "Safety Data Sheets/chemical information is accessible as appropriate.",
-        "Pesticides are used/stored only as permitted and do not contaminate food or food-contact surfaces.",
-        "No evidence of live pests, pest droppings, nesting or other infestation is observed.",
-        "Doors, screens, seals and other pest-exclusion measures are maintained.",
-        "Professional pest-control documentation/service records are current when used.",
-        "Evidence of corrective action is documented for pest findings.",
-      ]},
-      { title: "8. Cleaning, Sanitation & Operational Practices", items: [
-        "Written cleaning schedules are available and followed.",
-        "High-touch areas and food-contact areas are cleaned at appropriate frequencies.",
-        "Deep-cleaning needs are identified and assigned.",
-        "Clean equipment/utensils are protected from recontamination.",
-        "Single-service articles are stored and dispensed to prevent contamination.",
-        "Storage areas are orderly and free of unnecessary items.",
-        "Personal belongings are stored away from food and food-contact areas.",
-        "Chemical bottles/spray bottles are correctly labeled and stored.",
-        "Employees demonstrate correct cleaning and sanitizing practices.",
-        "Corrective actions from prior audits are completed and verified.",
-      ]},
-      { title: "9. Food Safety Documentation & Recordkeeping", items: [
-        "Food temperature logs are current and complete where required by the operation.",
-        "Cooling logs are current when applicable.",
-        "Hot/cold holding logs are current when used.",
-        "Sanitizer concentration logs are current when used.",
-        "Thermometer calibration logs are current when used.",
-        "Receiving logs/vendor records are maintained when applicable.",
-        "Employee training records are current.",
-        "Food manager certificate/documentation is current.",
-        "Employee illness reporting documentation is available.",
-        "Vomiting/diarrhea cleanup procedure is available and employees know the procedure.",
-        "HACCP plan and monitoring records are available when applicable.",
-        "Corrective action records are maintained and closed.",
-      ]},
-      { title: "10. Management & Continuous Compliance", items: [
-        "Person in charge can explain key food safety controls and corrective procedures.",
-        "Opening/closing food safety checks are completed consistently.",
-        "Employees know where to find food safety procedures and logs.",
-        "Management reviews audit results and assigns responsibility for corrections.",
-        "High-risk findings are corrected immediately or controlled pending correction.",
-        "Recurring findings are analyzed for root cause and retraining needs.",
-        "Self-audits are scheduled at the appropriate frequency.",
-        "Official inspection history is reviewed and tracked.",
-        "Business maintains an organized compliance file for licenses, training, audits and corrective actions.",
-        "Next audit date and follow-up responsibilities are documented.",
-      ]},
-    ],
-    summaryFields: [
-      { key: "highPriorityCount", label: "High-Priority / Immediate Risk Findings — Count", type: "number" },
-      { key: "intermediateCount", label: "Intermediate / Documentation Findings — Count", type: "number" },
-      { key: "basicCount", label: "Basic / Facility & Best-Practice Findings — Count", type: "number" },
-      { key: "overallResult", label: "Overall Result", type: "select", options: ["Ready", "Conditional / Corrective Action Needed", "Follow-Up Required"] },
-      { key: "followUpDate", label: "Follow-Up Date", type: "date" },
-      { key: "auditorRecommendation", label: "Auditor Recommendation", type: "textarea" },
-    ],
-    correctiveLabel: "Top Corrective Actions",
-    correctiveCols: ["Finding / Risk", "Corrective Action", "Responsible Person", "Due / Completed"],
-    gradeMap: { "Ready": "Pass", "Conditional / Corrective Action Needed": "Conditional Pass", "Follow-Up Required": "Fail" },
-  },
-
-  readiness: {
-    key: "readiness",
-    formTitle: "Get Ready for Your First Inspection — Pre-Permit Readiness Checklist",
-    statusOptions: ["PASS", "NC", "NA", "VERIFY"],
-    statusLabels: { PASS: "Pass / Ready", NC: "Correction Required", NA: "Not Applicable", VERIFY: "Verify w/ Agency" },
-    headerFields: [
-      { key: "business", label: "Business / Establishment" },
-      { key: "auditDate", label: "Audit Date", type: "date" },
-      { key: "owner", label: "Owner / Operator" },
-      { key: "pic", label: "Person in Charge" },
-      { key: "address", label: "Address" },
-      { key: "cityZip", label: "City / ZIP" },
-      { key: "regulatoryPath", label: "Regulatory Path", type: "select", options: ["DBPR", "FDACS Retail", "FDACS Wholesale/Manufactured", "Other/Confirm"] },
-      { key: "permitType", label: "Permit Type" },
-      { key: "auditStage", label: "Audit Stage", type: "select", options: ["Pre-Plan", "Pre-Construction", "Pre-Permit", "Pre-Inspection"] },
-      { key: "targetInspection", label: "Target Inspection", type: "date" },
-      { key: "auditor", label: "Auditor" },
-      { key: "recheckDate", label: "Recheck Date", type: "date" },
-    ],
-    sections: [
-      { title: "A. Regulatory Path & Pre-Application Review", items: [
-        "Regulatory agency/jurisdiction has been identified: DBPR Public Food Service / FDACS Retail Food / FDACS Wholesale/Manufactured / Other/Confirm.",
-        "Business activity and food processes have been reviewed to confirm the correct agency and permit type.",
-        "Menu/product list has been finalized and reviewed for food-safety implications.",
-        "Special processes have been identified (e.g., reduced oxygen packaging, acidification, curing, smoking, juice processing, seafood HACCP, specialized processing) and applicable regulatory review has been identified.",
-        "Plan review requirement has been determined and, when applicable, approved plans/specifications are available.",
-        "Construction/build-out will match approved plans and any plan-review provisos.",
-        "Required local building, zoning, fire, plumbing, electrical, grease/wastewater and occupancy approvals have been identified.",
-        "Business owner understands that FirstCheck is conducting a readiness audit, not issuing a government permit or approval.",
-      ]},
-      { title: "B. Documents & Permit File — Ready for Inspection", items: [
-        "Approved/stamped plans and plan-review correspondence are on site or readily accessible, when applicable.",
-        "Current floor plan accurately reflects the actual facility and equipment placement.",
-        "Equipment list/specifications match the installed equipment.",
-        "Menu/product list matches the operation that will be inspected.",
-        "Business/legal information needed for the permit application is organized.",
-        "Water supply documentation is available when required.",
-        "Sewer/septic documentation is available when required.",
-        "Certificate of Occupancy or other local approvals are available when applicable.",
-        "Fire inspection/approval documentation is available when applicable.",
-        "Grease interceptor/trap documentation or approval is available when applicable.",
-        "Any required food safety plans, HACCP plans, specialized process documentation, or written procedures are available when applicable.",
-      ]},
-      { title: "C. Building, Floors, Walls, Ceilings & General Condition", items: [
-        "Floors are smooth, durable, cleanable and in good repair in food preparation/storage areas.",
-        "Walls are smooth, durable, cleanable and in good repair where required.",
-        "Ceilings are maintained to prevent contamination and are cleanable where required.",
-        "Openings, doors, windows and screens are maintained to limit pest entry where applicable.",
-        "Exterior doors/openings have appropriate pest-exclusion measures.",
-        "Raw wood or other surfaces requiring sealing/finishing have been properly sealed.",
-        "Facility is free of construction debris, dust, exposed insulation and unfinished surfaces that could contaminate food.",
-        "Lighting is installed, operational and adequate for safe food handling.",
-        "Required light shields/protective coverings are installed where applicable.",
-        "No extension cords or temporary electrical arrangements are being used in place of required permanent installations.",
-        "Equipment and fixtures are positioned so the facility can be effectively cleaned and maintained.",
-      ]},
-      { title: "D. Handwashing & Employee Facilities", items: [
-        "Required handwashing sinks are installed in appropriate locations and are unobstructed.",
-        "Handwashing sinks have hot and cold running water where required.",
-        "Soap is provided at each required handwashing sink.",
-        "Single-use paper towels or an approved hand-drying method is provided.",
-        "Handwashing reminder signage is posted where required.",
-        "Handwashing sinks are not being used for food preparation, utensil washing or other incompatible purposes.",
-        "Employee restroom facilities are complete, supplied and accessible as required.",
-        "Public restroom requirements have been evaluated for the establishment type.",
-        "Restroom access does not create a contamination route through food preparation, storage or utensil-washing areas where prohibited.",
-      ]},
-      { title: "E. Potable Water, Plumbing, Drains & Wastewater", items: [
-        "Approved potable water source is available and documentation is ready when required.",
-        "Hot water supply is adequate for the operation.",
-        "Cold water supply is adequate for the operation.",
-        "Plumbing fixtures are installed and functioning properly.",
-        "Required backflow-prevention devices/vacuum breakers are installed where applicable.",
-        "Floor sinks/drains are installed where required and are properly connected.",
-        "No improper plumbing connections or cross-connections are observed.",
-        "Wastewater/sewage disposal is approved and documentation is available when required.",
-        "Grease interceptor/trap is installed and accessible where required.",
-        "Drainage is adequate and does not create standing water or contamination risks.",
-      ]},
-      { title: "F. Sinks, Warewashing & Cleaning Facilities", items: [
-        "Required three-compartment sink is installed, properly plumbed and operational, when applicable.",
-        "Drainboards or equivalent approved space is provided for clean and soiled utensils.",
-        "Utility/mop sink is installed and operational where required.",
-        "Commercial dishmachine is installed and operational when used instead of manual warewashing.",
-        "Dishmachine has required temperature/chemical controls and documentation when applicable.",
-        "Required sanitizer is available and appropriate for the intended use.",
-        "Correct chemical sanitizer test kit/strips are available when applicable.",
-        "Cleaning chemicals are stored so they cannot contaminate food, utensils or food-contact surfaces.",
-        "Mop/cleaning tools can be stored and dried without creating contamination.",
-        "Cleaning equipment and chemical storage areas are complete and functional.",
-      ]},
-      { title: "G. Food Equipment & Cold/Hot Holding", items: [
-        "All food equipment identified on approved plans is installed or otherwise meets the approved plan requirements.",
-        "Refrigerators are installed, operating and capable of maintaining required cold-holding temperatures.",
-        "Freezers are installed, operating and capable of maintaining frozen food appropriately.",
-        "Hot-holding equipment is installed and operational when applicable.",
-        "Each required cold/hot holding unit has an appropriate working thermometer or temperature-indicating device.",
-        "A calibrated food thermometer capable of accurately measuring food temperatures is available.",
-        "Thermometers are accurate and have been checked/calibrated according to the operation's procedure.",
-        "Food-contact surfaces are smooth, durable, corrosion-resistant where required, and easily cleanable.",
-        "Equipment is installed/located to permit cleaning and prevent contamination.",
-        "Equipment requiring ventilation/hood systems is properly installed and operational.",
-        "Fire suppression/hood documentation and current tags are available when applicable.",
-      ]},
-      { title: "H. Food Storage, Preparation & Cross-Contamination Controls", items: [
-        "Dry storage is clean, organized and adequate for the intended operation.",
-        "Food is stored off the floor on approved shelving/racks or otherwise protected as required.",
-        "Food-contact and food storage areas are protected from contamination.",
-        "Raw animal foods can be stored separately from ready-to-eat foods.",
-        "Refrigeration storage can maintain safe separation and prevent drips/cross-contamination.",
-        "Food containers are food-grade, clean, intact and suitable for use.",
-        "Date-marking/labeling procedures are established where applicable.",
-        "FIFO/FEFO rotation system is established.",
-        "Approved thawing methods are identified and understood.",
-        "Food preparation flow from receiving/storage through preparation, cooking, cooling and service minimizes cross-contamination.",
-        "Allergen cross-contact controls have been identified for the operation.",
-      ]},
-      { title: "I. Temperature Control & Food Safety Procedures", items: [
-        "Written procedures identify how TCS foods will be received, stored, prepared, cooked, cooled, reheated and held.",
-        "Applicable cooking temperatures are identified for the foods/processes served.",
-        "Cooling procedures are established for foods that will be cooled.",
-        "Reheating procedures are established for foods that will be reheated for hot holding.",
-        "Hot-holding and cold-holding monitoring procedures are established.",
-        "Time as a public health control is not used unless the operation has an appropriate procedure/approval when required.",
-        "Thermometer use and sanitation procedures are established.",
-        "Employees/person in charge can explain how temperature controls will be maintained.",
-        "Food safety records/logs needed for the operation have been created and are ready for use.",
-        "Special processes have documented controls when required.",
-      ]},
-      { title: "J. Employee Health, Hygiene & Food Safety Training", items: [
-        "Person in charge/management understands employee illness reporting responsibilities.",
-        "Employee health/illness reporting procedures are available.",
-        "Employees have been instructed on proper handwashing.",
-        "Employees have been instructed on preventing bare-hand contact with ready-to-eat food.",
-        "Hair restraints and personal hygiene expectations are established.",
-        "Employees understand glove use and glove-changing expectations when gloves are used.",
-        "Food safety training/employee food-handler documentation is organized when required/applicable.",
-        "Certified Food Protection Manager/Food Safety Manager requirement has been evaluated and certification/training plan is in place when applicable.",
-        "Person in charge can explain the establishment's major food safety controls.",
-        "Vomiting/diarrheal-event cleanup procedure is available and supplies are identified.",
-      ]},
-      { title: "K. Pest Control, Garbage & Exterior", items: [
-        "Facility is free of visible evidence of pest infestation.",
-        "Doors, screens, seals and other pest-exclusion measures are complete.",
-        "Trash containers are adequate, durable and in good repair.",
-        "Outdoor dumpster/garbage area is located and maintained as required.",
-        "Dumpster/garbage containers have appropriate lids or covers where required.",
-        "Dumpster/grease containers are on appropriate nonabsorbent surfaces where required.",
-        "Grease/waste containers are leak-free and maintained.",
-        "Pest-control service/documentation is available when applicable.",
-        "Exterior grounds do not create a condition that could contribute to pest entry or food contamination.",
-      ]},
-      { title: "L. Labeling, Consumer Information & Special Requirements", items: [
-        "Required consumer advisory is prepared when serving raw or undercooked animal foods.",
-        "Required raw-shellfish/oyster warning is prepared when applicable.",
-        "Menu descriptions accurately identify foods and applicable consumer advisories.",
-        "Allergen information/controls are established for the operation.",
-        "Packaged foods prepared on site have required labeling information when applicable.",
-        "Required warning signs/posters are prepared and ready for posting.",
-        "Self-service food/condiment controls are ready where applicable.",
-        "Special process approvals/variances/HACCP documentation are available when required.",
-      ]},
-      { title: "M. Final Pre-Permit Walk-Through", items: [
-        "Facility is fully built out and no construction work remains that could affect inspection readiness.",
-        "All required utilities are on and functioning.",
-        "All required equipment is installed, clean and operational.",
-        "All required sinks have water, drainage and supplies.",
-        "Refrigeration/freezers have reached operating temperature before the readiness audit.",
-        "Food thermometer and sanitizer test kit are available.",
-        "Required fire, building, plumbing, electrical and occupancy approvals have been obtained or their status is documented.",
-        "Approved plans and required documents are organized for quick presentation to the inspector.",
-        "Person in charge is scheduled to be present and can answer questions/demonstrate food safety procedures.",
-        "No food service to the public will begin before the legally required license/permit and approvals are obtained.",
-        "Any deficiencies found by FirstCheck have been corrected or have a documented corrective-action plan before requesting/attending the government inspection.",
-      ]},
-    ],
-    summaryFields: [
-      { key: "criticalCount", label: "Critical / High-Risk Deficiencies — Count", type: "number" },
-      { key: "otherCount", label: "Other Deficiencies — Count", type: "number" },
-      { key: "outstandingCount", label: "Documents/Approvals Outstanding — Count", type: "number" },
-      { key: "overallResult", label: "Overall Readiness", type: "select", options: ["Ready for Regulatory Inspection", "Not Ready"] },
-      { key: "followUpDate", label: "Recheck Date", type: "date" },
-      { key: "agencyQuestions", label: "Agency/Permit Questions Requiring Confirmation", type: "textarea" },
-      { key: "auditorRecommendation", label: "Auditor Recommendation", type: "textarea" },
-    ],
-    correctiveLabel: "Top Corrective Actions Before Inspection",
-    correctiveCols: ["Finding / Risk", "Required Correction", "Responsible", "Due / Verified"],
-    gradeMap: { "Ready for Regulatory Inspection": "Pass", "Not Ready": "Fail" },
-  },
-};
-
-const STATUS_COLOR = {
-  C: { fg: "#3B7350", bg: "#E1EBE2" }, PASS: { fg: "#3B7350", bg: "#E1EBE2" },
-  NC: { fg: "#AA3D2E", bg: "#F3E1DC" },
-  NA: { fg: "#5B6478", bg: "#E7E4D9" },
-  OBS: { fg: "#B4791F", bg: "#F5E8D3" }, VERIFY: { fg: "#B4791F", bg: "#F5E8D3" },
-};
-
-
-
-
-// ---------------------------------------------------------------------------
 // Small shared UI
 // ---------------------------------------------------------------------------
 function Badge({ label, fg, bg }) {
@@ -687,7 +117,6 @@ const inputCls = "w-full rounded px-3 py-2 text-sm outline-none";
 const inputStyle = { border: "1px solid " + C.line, backgroundColor: "#fff", color: C.ink };
 
 function Header({ role, onLogout, fullName }) {
-  const { lang, setLang, t } = useLang();
   return (
     <div className="no-print flex items-center justify-between flex-wrap gap-3 mb-8">
       <div className="flex items-center gap-2.5">
@@ -697,17 +126,13 @@ function Header({ role, onLogout, fullName }) {
             <span style={{ color: C.ink }}>First</span><span style={{ color: C.teal }}>Check</span>
           </span>
           <div className="text-[10px] tracking-[0.2em] uppercase mt-0.5" style={{ color: C.inkSoft }}>
-            Consultants <span className="hidden sm:inline" style={{ color: C.teal }}>· {t("tagline")}</span>
+            Consultants <span className="hidden sm:inline" style={{ color: C.teal }}>· Audit. Comply. Improve.</span>
           </div>
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <div className="flex rounded overflow-hidden" style={{ border: "1px solid " + C.line }}>
-          <button onClick={() => setLang("en")} className="text-xs font-medium px-2.5 py-1.5" style={lang === "en" ? { backgroundColor: C.ink, color: "#fff" } : { backgroundColor: "#fff", color: C.inkSoft }}>EN</button>
-          <button onClick={() => setLang("es")} className="text-xs font-medium px-2.5 py-1.5" style={lang === "es" ? { backgroundColor: C.ink, color: "#fff" } : { backgroundColor: "#fff", color: C.inkSoft }}>ES</button>
-        </div>
-        <span className="text-xs" style={{ color: C.inkSoft }}>{fullName || ""} · {role === "admin" ? t("admin") : t("client")}</span>
-        <button onClick={onLogout} className="text-xs font-medium px-3 py-1.5 rounded" style={{ border: "1px solid " + C.line, color: C.inkSoft }}>{t("logout")}</button>
+        <span className="text-xs" style={{ color: C.inkSoft }}>{fullName || ""} · {role === "admin" ? "Admin" : "Client"}</span>
+        <button onClick={onLogout} className="text-xs font-medium px-3 py-1.5 rounded" style={{ border: "1px solid " + C.line, color: C.inkSoft }}>Log out</button>
       </div>
     </div>
   );
@@ -717,7 +142,6 @@ function Header({ role, onLogout, fullName }) {
 // Login screen
 // ---------------------------------------------------------------------------
 function Login() {
-  const { lang, setLang, t } = useLang();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -734,25 +158,19 @@ function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.paper }}>
       <div className="w-full max-w-sm rounded-lg p-8" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-        <div className="flex justify-end mb-2">
-          <div className="flex rounded overflow-hidden" style={{ border: "1px solid " + C.line }}>
-            <button type="button" onClick={() => setLang("en")} className="text-xs font-medium px-2.5 py-1" style={lang === "en" ? { backgroundColor: C.ink, color: "#fff" } : { backgroundColor: "#fff", color: C.inkSoft }}>EN</button>
-            <button type="button" onClick={() => setLang("es")} className="text-xs font-medium px-2.5 py-1" style={lang === "es" ? { backgroundColor: C.ink, color: "#fff" } : { backgroundColor: "#fff", color: C.inkSoft }}>ES</button>
-          </div>
-        </div>
         <img src={LOGO_FULL} alt="FirstCheck Consultants" className="h-24 w-auto mx-auto mb-6" />
         <form onSubmit={submit} className="space-y-3">
           <div>
-            <FieldLabel>{t("email")}</FieldLabel>
+            <FieldLabel>Email</FieldLabel>
             <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className={inputCls} style={inputStyle} />
           </div>
           <div>
-            <FieldLabel>{t("password")}</FieldLabel>
+            <FieldLabel>Password</FieldLabel>
             <input type="password" required value={password} onChange={e => setPassword(e.target.value)} className={inputCls} style={inputStyle} />
           </div>
           {error && <p className="text-sm" style={{ color: C.red }}>{error}</p>}
           <button disabled={loading} type="submit" className="w-full text-sm font-medium py-2.5 rounded text-white mt-2" style={{ backgroundColor: C.teal }}>
-            {loading ? t("signingIn") : t("signIn")}
+            {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
       </div>
@@ -778,7 +196,6 @@ function Sparkline({ points, color }) {
 }
 
 function ClientDashboard({ client, audits, selfAudits, openItems, latest, onToggleResolved }) {
-  const { t, tv } = useLang();
   const selfSorted = useMemo(() => [...selfAudits].sort((a, b) => (a.date < b.date ? -1 : 1)), [selfAudits]);
   const passRates = selfSorted.map(sa => {
     const items = sa.items || [];
@@ -798,40 +215,40 @@ function ClientDashboard({ client, audits, selfAudits, openItems, latest, onTogg
     <div className="space-y-8">
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="rounded p-4" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>{t("latestInspection")}</p>
-          {latest ? <Badge label={tv(latest.grade)} {...gradeColor(latest.grade)} /> : <p className="text-sm" style={{ color: C.inkSoft }}>{t("noAuditsYet")}</p>}
+          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>Latest inspection</p>
+          {latest ? <Badge label={latest.grade} {...gradeColor(latest.grade)} /> : <p className="text-sm" style={{ color: C.inkSoft }}>No audits yet</p>}
         </div>
         <div className="rounded p-4" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>{t("latestSelfAudit")}</p>
+          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>Latest self-audit</p>
           {latestSelfRate !== null ? (
-            <p className="font-serif text-lg" style={{ color: latestSelfRate >= 90 ? C.green : latestSelfRate >= 70 ? C.amber : C.red }}>{latestSelfRate}{t("passPct")}</p>
-          ) : <p className="text-sm" style={{ color: C.inkSoft }}>{t("noneSubmitted")}</p>}
+            <p className="font-serif text-lg" style={{ color: latestSelfRate >= 90 ? C.green : latestSelfRate >= 70 ? C.amber : C.red }}>{latestSelfRate}% pass</p>
+          ) : <p className="text-sm" style={{ color: C.inkSoft }}>None submitted</p>}
         </div>
         <div className="rounded p-4" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>{t("nextScheduledAudit")}</p>
-          <p className="font-serif text-lg" style={{ color: C.ink }}>{client.next_audit ? fmt(client.next_audit) : t("notScheduled")}</p>
+          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>Next scheduled audit</p>
+          <p className="font-serif text-lg" style={{ color: C.ink }}>{client.next_audit ? fmt(client.next_audit) : "Not scheduled"}</p>
         </div>
         <div className="rounded p-4" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>{t("openActionItems")}</p>
-          <p className="font-serif text-lg" style={{ color: openItems.length ? C.amber : C.green }}>{openItems.length} {t("open")}</p>
+          <p className="text-xs mb-2" style={{ color: C.inkSoft }}>Open action items</p>
+          <p className="font-serif text-lg" style={{ color: openItems.length ? C.amber : C.green }}>{openItems.length} open</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="rounded p-5" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-          <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>{t("selfAuditTrend")}</h3>
+          <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Self-audit trend</h3>
           <Sparkline points={passRates} color={C.teal} />
-          <p className="text-xs mt-2" style={{ color: C.inkSoft }}>{passRates.length ? t("trendCaption").replace("{n}", passRates.length) : t("trendEmpty")}</p>
+          <p className="text-xs mt-2" style={{ color: C.inkSoft }}>{passRates.length ? "Last " + passRates.length + " self-audits, pass rate over time" : "Submit a self-audit to start tracking your trend."}</p>
         </div>
         <div className="rounded p-5" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-          <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>{t("areasOfOpportunity")}</h3>
+          <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Areas of opportunity</h3>
           {opportunity.length === 0 ? (
-            <p className="text-sm" style={{ color: C.inkSoft }}>{t("noRecurringIssues")}</p>
+            <p className="text-sm" style={{ color: C.inkSoft }}>No recurring issues found — nice work.</p>
           ) : (
             <div className="space-y-2">
               {opportunity.map(([cat, count]) => (
                 <div key={cat}>
-                  <div className="flex justify-between text-xs mb-1"><span style={{ color: C.ink }}>{tv(cat)}</span><span style={{ color: C.inkSoft }}>{count}</span></div>
+                  <div className="flex justify-between text-xs mb-1"><span style={{ color: C.ink }}>{cat}</span><span style={{ color: C.inkSoft }}>{count}</span></div>
                   <div className="h-2 rounded-full" style={{ backgroundColor: C.line }}>
                     <div className="h-2 rounded-full" style={{ width: (count / maxCount * 100) + "%", backgroundColor: C.amber }} />
                   </div>
@@ -843,9 +260,9 @@ function ClientDashboard({ client, audits, selfAudits, openItems, latest, onTogg
       </div>
 
       <div>
-        <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>{t("thingsToDo")}</h3>
+        <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Things to do</h3>
         {openItems.length === 0 ? (
-          <p className="text-sm rounded p-4" style={{ color: C.inkSoft, backgroundColor: C.panel, border: "1px solid " + C.line }}>{t("nothingOpen")}</p>
+          <p className="text-sm rounded p-4" style={{ color: C.inkSoft, backgroundColor: C.panel, border: "1px solid " + C.line }}>Nothing open right now — nice work.</p>
         ) : (
           <div className="rounded overflow-hidden" style={{ border: "1px solid " + C.line }}>
             {openItems.map((item, i) => (
@@ -855,12 +272,12 @@ function ClientDashboard({ client, audits, selfAudits, openItems, latest, onTogg
                 </button>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <Badge label={tv(item.severity)} {...severityColor(item.severity)} />
-                    <span className="text-xs" style={{ color: C.inkSoft }}>{tv(item.category)} · {t("from")} {fmt(item.auditDate)} {t("auditWord")}</span>
+                    <Badge label={item.severity} {...severityColor(item.severity)} />
+                    <span className="text-xs" style={{ color: C.inkSoft }}>{item.category} · from {fmt(item.auditDate)} audit</span>
                   </div>
                   <p className="text-sm" style={{ color: C.ink }}>{item.description}</p>
                 </div>
-                <span className="text-xs whitespace-nowrap" style={{ color: C.inkSoft }}>{t("due")} {fmt(item.due_date)}</span>
+                <span className="text-xs whitespace-nowrap" style={{ color: C.inkSoft }}>Due {fmt(item.due_date)}</span>
               </div>
             ))}
           </div>
@@ -871,7 +288,6 @@ function ClientDashboard({ client, audits, selfAudits, openItems, latest, onTogg
 }
 
 function SelfAuditFillForm({ onCancel, onSubmit }) {
-  const { t, tv } = useLang();
   const [submittedBy, setSubmittedBy] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [results, setResults] = useState(() => {
@@ -888,23 +304,23 @@ function SelfAuditFillForm({ onCancel, onSubmit }) {
   };
   return (
     <div className="max-w-2xl">
-      <button onClick={onCancel} className="text-sm mb-4" style={{ color: C.teal }}>{t("cancel")}</button>
+      <button onClick={onCancel} className="text-sm mb-4" style={{ color: C.teal }}>← Cancel</button>
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <div><FieldLabel>{t("completedBy")}</FieldLabel><input value={submittedBy} onChange={e => setSubmittedBy(e.target.value)} className={inputCls} style={inputStyle} /></div>
-        <div><FieldLabel>{t("date")}</FieldLabel><input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls} style={inputStyle} /></div>
+        <div><FieldLabel>Completed by</FieldLabel><input value={submittedBy} onChange={e => setSubmittedBy(e.target.value)} className={inputCls} style={inputStyle} /></div>
+        <div><FieldLabel>Date</FieldLabel><input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls} style={inputStyle} /></div>
       </div>
       {CHECKLIST.map(sec => (
         <div key={sec.category} className="mb-5">
-          <h4 className="font-serif text-base mb-2" style={{ color: C.teal }}>{tv(sec.category)}</h4>
+          <h4 className="font-serif text-base mb-2" style={{ color: C.teal }}>{sec.category}</h4>
           <div className="space-y-1">
             {sec.items.map((item, i) => {
               const key = sec.category + "|" + i; const pass = results[key];
               return (
                 <div key={key} className="flex items-center justify-between gap-3 p-2 rounded" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-                  <span className="text-sm" style={{ color: C.ink }}>{tv(item)}</span>
+                  <span className="text-sm" style={{ color: C.ink }}>{item}</span>
                   <div className="flex gap-1 shrink-0">
-                    <button onClick={() => setResults(p => ({ ...p, [key]: true }))} className="text-xs px-2 py-1 rounded" style={pass ? { backgroundColor: C.green, color: "#fff" } : { border: "1px solid " + C.line, color: C.inkSoft }}>{t("pass")}</button>
-                    <button onClick={() => setResults(p => ({ ...p, [key]: false }))} className="text-xs px-2 py-1 rounded" style={!pass ? { backgroundColor: C.red, color: "#fff" } : { border: "1px solid " + C.line, color: C.inkSoft }}>{t("fail")}</button>
+                    <button onClick={() => setResults(p => ({ ...p, [key]: true }))} className="text-xs px-2 py-1 rounded" style={pass ? { backgroundColor: C.green, color: "#fff" } : { border: "1px solid " + C.line, color: C.inkSoft }}>Pass</button>
+                    <button onClick={() => setResults(p => ({ ...p, [key]: false }))} className="text-xs px-2 py-1 rounded" style={!pass ? { backgroundColor: C.red, color: "#fff" } : { border: "1px solid " + C.line, color: C.inkSoft }}>Fail</button>
                   </div>
                 </div>
               );
@@ -912,13 +328,12 @@ function SelfAuditFillForm({ onCancel, onSubmit }) {
           </div>
         </div>
       ))}
-      <button onClick={submit} className="w-full text-sm font-medium py-2.5 rounded text-white" style={{ backgroundColor: C.teal }}>{t("submitSelfAudit")}</button>
+      <button onClick={submit} className="w-full text-sm font-medium py-2.5 rounded text-white" style={{ backgroundColor: C.teal }}>Submit self-audit</button>
     </div>
   );
 }
 
 function ClientSelfAudits({ selfAudits, onSubmit, onPrint }) {
-  const { t, tv } = useLang();
   const [filling, setFilling] = useState(false);
   const [expanded, setExpanded] = useState(null);
   const sorted = [...selfAudits].sort((a, b) => (a.date < b.date ? 1 : -1));
@@ -931,15 +346,15 @@ function ClientSelfAudits({ selfAudits, onSubmit, onPrint }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="font-serif text-lg" style={{ color: C.ink }}>{t("selfAudits")}</h3>
-          <p className="text-sm" style={{ color: C.inkSoft }}>{t("selfAuditsDesc")}</p>
+          <h3 className="font-serif text-lg" style={{ color: C.ink }}>Self-audits</h3>
+          <p className="text-sm" style={{ color: C.inkSoft }}>Fill this out digitally, or print a blank copy for your kitchen manager.</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={onPrint} className="text-sm font-medium px-4 py-2 rounded" style={{ border: "1px solid " + C.line, color: C.ink }}>{t("printBlankForm")}</button>
-          <button onClick={() => setFilling(true)} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>{t("newSelfAudit")}</button>
+          <button onClick={onPrint} className="text-sm font-medium px-4 py-2 rounded" style={{ border: "1px solid " + C.line, color: C.ink }}>Print blank form</button>
+          <button onClick={() => setFilling(true)} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>+ New self-audit</button>
         </div>
       </div>
-      {sorted.length === 0 && <p className="text-sm" style={{ color: C.inkSoft }}>{t("noSelfAudits")}</p>}
+      {sorted.length === 0 && <p className="text-sm" style={{ color: C.inkSoft }}>No self-audits submitted yet.</p>}
       <div className="space-y-2">
         {sorted.map(sa => {
           const items = sa.items || []; const total = items.length; const passed = items.filter(i => i.passed).length;
@@ -949,17 +364,17 @@ function ClientSelfAudits({ selfAudits, onSubmit, onPrint }) {
               <button onClick={() => setExpanded(expanded === sa.id ? null : sa.id)} className="w-full flex items-center justify-between p-4 text-left">
                 <div>
                   <p className="text-sm font-medium" style={{ color: C.ink }}>{fmt(sa.date)}{sa.submitted_by ? " · " + sa.submitted_by : ""}</p>
-                  <p className="text-xs" style={{ color: C.inkSoft }}>{passed}/{total} {t("passed")}</p>
+                  <p className="text-xs" style={{ color: C.inkSoft }}>{passed}/{total} passed</p>
                 </div>
-                <Badge label={rate + t("passPct")} fg={rate >= 90 ? C.green : rate >= 70 ? C.amber : C.red} bg={rate >= 90 ? C.greenSoft : rate >= 70 ? C.amberSoft : C.redSoft} />
+                <Badge label={rate + "% pass"} fg={rate >= 90 ? C.green : rate >= 70 ? C.amber : C.red} bg={rate >= 90 ? C.greenSoft : rate >= 70 ? C.amberSoft : C.redSoft} />
               </button>
               {expanded === sa.id && (
                 <div className="px-4 pb-4 space-y-1">
                   {items.filter(i => !i.passed).length === 0
-                    ? <p className="text-sm" style={{ color: C.green }}>{t("everythingPassed")}</p>
+                    ? <p className="text-sm" style={{ color: C.green }}>Everything passed.</p>
                     : items.filter(i => !i.passed).map(i => (
                       <div key={i.id} className="text-sm flex items-center gap-2" style={{ color: C.ink }}>
-                        <span style={{ color: C.red }}>✕</span><span>{tv(i.item_text)}</span>
+                        <span style={{ color: C.red }}>✕</span><span>{i.item_text}</span>
                       </div>
                     ))}
                 </div>
@@ -973,9 +388,8 @@ function ClientSelfAudits({ selfAudits, onSubmit, onPrint }) {
 }
 
 function ResourceList({ resources, section, kindFilter }) {
-  const { t } = useLang();
   const items = resources.filter(r => r.section === section && (!kindFilter || r.kind === kindFilter));
-  if (items.length === 0) return <p className="text-sm" style={{ color: C.inkSoft }}>{t("nothingHere")}</p>;
+  if (items.length === 0) return <p className="text-sm" style={{ color: C.inkSoft }}>Nothing here yet.</p>;
   return (
     <div className="space-y-2">
       {items.map(r => (
@@ -989,15 +403,14 @@ function ResourceList({ resources, section, kindFilter }) {
 }
 
 function ClientEducation({ resources }) {
-  const { t } = useLang();
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>{t("videos")}</h3>
+        <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Videos</h3>
         <ResourceList resources={resources} section="education" kindFilter="video" />
       </div>
       <div>
-        <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>{t("guidesDocs")}</h3>
+        <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Guides & documents</h3>
         <ResourceList resources={resources} section="education" kindFilter="document" />
       </div>
     </div>
@@ -1005,27 +418,24 @@ function ClientEducation({ resources }) {
 }
 
 function ClientForms({ resources, onFillSelfAudit }) {
-  const { t } = useLang();
   return (
     <div className="space-y-6">
       <div className="rounded p-4 flex items-center justify-between flex-wrap gap-3" style={{ backgroundColor: C.tealSoft, border: "1px solid " + C.line }}>
         <div>
-          <p className="text-sm font-medium" style={{ color: C.ink }}>{t("selfAssessmentChecklist")}</p>
-          <p className="text-xs" style={{ color: C.inkSoft }}>{t("fillOnlineOrPrint")}</p>
+          <p className="text-sm font-medium" style={{ color: C.ink }}>Self-assessment checklist</p>
+          <p className="text-xs" style={{ color: C.inkSoft }}>Fill it out online or print a blank copy.</p>
         </div>
-        <button onClick={onFillSelfAudit} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>{t("goToSelfAudits")}</button>
+        <button onClick={onFillSelfAudit} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>Go to self-audits</button>
       </div>
       <div>
-        <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>{t("templatesDownloads")}</h3>
+        <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Templates & downloads</h3>
         <ResourceList resources={resources} section="forms" />
       </div>
     </div>
   );
 }
 
-
 function ClientPortal({ client, audits, selfAudits, resources, onToggleResolved, onSubmitSelfAudit }) {
-  const { t, tv } = useLang();
   const [tab, setTab] = useState("dashboard");
   const [expanded, setExpanded] = useState(null);
 
@@ -1038,34 +448,34 @@ function ClientPortal({ client, audits, selfAudits, resources, onToggleResolved,
   }, [audits]);
 
   if (!client) {
-    return <p className="text-sm" style={{ color: C.inkSoft }}>{t("noClientLinked")}</p>;
+    return <p className="text-sm" style={{ color: C.inkSoft }}>Your account isn't linked to a business yet — ask your consultant to finish setting up your profile.</p>;
   }
 
   if (tab === "print") {
     return (
       <div>
         <div className="no-print flex items-center gap-3 mb-6">
-          <button onClick={() => setTab("selfaudits")} className="text-sm px-3 py-2 rounded" style={{ color: C.teal }}>{t("backToPortal")}</button>
-          <button onClick={() => window.print()} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>{t("printForm")}</button>
+          <button onClick={() => setTab("selfaudits")} className="text-sm px-3 py-2 rounded" style={{ color: C.teal }}>← Back to portal</button>
+          <button onClick={() => window.print()} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>Print form</button>
         </div>
         <div className="max-w-2xl mx-auto rounded p-8" style={{ backgroundColor: "#fff", border: "1px solid " + C.line }}>
           <div className="mb-6" style={{ borderBottom: "2px solid " + C.ink, paddingBottom: 12 }}>
             <img src={LOGO_FULL} alt="FirstCheck Consultants" className="h-24 w-auto mb-3" />
-            <p className="text-xs tracking-[0.2em] uppercase mb-2" style={{ color: C.teal }}>{t("selfAssessmentChecklist")}</p>
+            <p className="text-xs tracking-[0.2em] uppercase mb-2" style={{ color: C.teal }}>Self-assessment checklist</p>
             <h2 className="font-serif text-2xl" style={{ color: C.ink }}>{client.name}</h2>
             <div className="flex gap-8 mt-3 text-sm" style={{ color: C.inkSoft }}>
-              <span>{t("completedByBlank")}</span>
-              <span>{t("dateBlank")}</span>
+              <span>Completed by: ____________________</span>
+              <span>Date: ____________________</span>
             </div>
           </div>
           {CHECKLIST.map(section => (
             <div key={section.category} className="mb-5">
-              <h3 className="font-serif text-base mb-2" style={{ color: C.teal }}>{tv(section.category)}</h3>
+              <h3 className="font-serif text-base mb-2" style={{ color: C.teal }}>{section.category}</h3>
               <div className="space-y-2">
                 {section.items.map((item, i) => (
                   <div key={i} className="flex items-start gap-2 text-sm" style={{ color: C.ink }}>
                     <span className="mt-0.5 w-4 h-4 shrink-0 rounded-sm inline-block" style={{ border: "1.5px solid " + C.ink }} />
-                    <span>{tv(item)}</span>
+                    <span>{item}</span>
                   </div>
                 ))}
               </div>
@@ -1076,13 +486,13 @@ function ClientPortal({ client, audits, selfAudits, resources, onToggleResolved,
     );
   }
 
-  const NAV = [["dashboard", t("navDashboard")], ["audits", t("navAudits")], ["selfaudits", t("navSelfAudits")], ["education", t("navEducation")], ["forms", t("navForms")]];
+  const NAV = [["dashboard", "Dashboard"], ["audits", "Audits"], ["selfaudits", "Self-Audits"], ["education", "Education"], ["forms", "Forms"]];
 
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm" style={{ color: C.inkSoft }}>{tv(client.type)} · {tv(client.package)} {t("plan")}</p>
-        <h2 className="font-serif text-2xl mt-1" style={{ color: C.ink }}>{t("welcomeBack")} {client.name}</h2>
+        <p className="text-sm" style={{ color: C.inkSoft }}>{client.type} · {client.package} plan</p>
+        <h2 className="font-serif text-2xl mt-1" style={{ color: C.ink }}>Welcome back, {client.name}</h2>
       </div>
 
       <div className="flex gap-2 flex-wrap no-print">
@@ -1096,24 +506,24 @@ function ClientPortal({ client, audits, selfAudits, resources, onToggleResolved,
 
       {tab === "audits" && (
         <div>
-          <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>{t("auditHistory")}</h3>
+          <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>Audit history</h3>
           <div className="space-y-2">
             {sorted.map(a => (
               <div key={a.id} className="rounded" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
                 <button onClick={() => setExpanded(expanded === a.id ? null : a.id)} className="w-full flex items-center justify-between p-4 text-left">
                   <div>
-                    <p className="text-sm font-medium" style={{ color: C.ink }}>{fmt(a.date)} · {tv(a.type)}</p>
-                    <p className="text-xs" style={{ color: C.inkSoft }}>{t("score")} {a.score}</p>
+                    <p className="text-sm font-medium" style={{ color: C.ink }}>{fmt(a.date)} · {a.type}</p>
+                    <p className="text-xs" style={{ color: C.inkSoft }}>Score {a.score}</p>
                   </div>
-                  <Badge label={tv(a.grade)} {...gradeColor(a.grade)} />
+                  <Badge label={a.grade} {...gradeColor(a.grade)} />
                 </button>
                 {expanded === a.id && (
                   <div className="px-4 pb-4 space-y-2">
                     {(a.findings || []).length === 0
-                      ? <p className="text-sm" style={{ color: C.inkSoft }}>{t("noFindings")}</p>
+                      ? <p className="text-sm" style={{ color: C.inkSoft }}>No findings recorded for this visit.</p>
                       : a.findings.map(f => (
                         <div key={f.id} className="flex items-center gap-2 text-sm" style={{ color: C.ink }}>
-                          <Badge label={tv(f.severity)} {...severityColor(f.severity)} /><span>{f.description}</span>{f.resolved && <span style={{ color: C.green }}>✓</span>}
+                          <Badge label={f.severity} {...severityColor(f.severity)} /><span>{f.description}</span>{f.resolved && <span style={{ color: C.green }}>✓</span>}
                         </div>
                       ))}
                   </div>
@@ -1135,352 +545,12 @@ function ClientPortal({ client, audits, selfAudits, resources, onToggleResolved,
 // ---------------------------------------------------------------------------
 // Admin Console
 // ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// Signature pad — works with mouse, touch, and stylus via Pointer Events
-// ---------------------------------------------------------------------------
-function SignaturePad({ onChange }) {
-  const canvasRef = useRef(null);
-  const drawing = useRef(false);
-  const hasDrawn = useRef(false);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ratio = window.devicePixelRatio || 1;
-    canvas.width = canvas.clientWidth * ratio;
-    canvas.height = canvas.clientHeight * ratio;
-    const ctx = canvas.getContext("2d");
-    ctx.scale(ratio, ratio);
-    ctx.lineWidth = 2.2;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.strokeStyle = "#1C2B4A";
-  }, []);
-
-  const pos = (e) => {
-    const rect = canvasRef.current.getBoundingClientRect();
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  };
-  const start = (e) => {
-    e.preventDefault();
-    drawing.current = true;
-    const ctx = canvasRef.current.getContext("2d");
-    const p = pos(e);
-    ctx.beginPath();
-    ctx.moveTo(p.x, p.y);
-  };
-  const move = (e) => {
-    if (!drawing.current) return;
-    e.preventDefault();
-    const ctx = canvasRef.current.getContext("2d");
-    const p = pos(e);
-    ctx.lineTo(p.x, p.y);
-    ctx.stroke();
-    hasDrawn.current = true;
-  };
-  const end = () => {
-    if (!drawing.current) return;
-    drawing.current = false;
-    if (hasDrawn.current) onChange(canvasRef.current.toDataURL("image/png"));
-  };
-  const clear = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    hasDrawn.current = false;
-    onChange(null);
-  };
-
-  return (
-    <div>
-      <canvas
-        ref={canvasRef}
-        className="w-full touch-none rounded"
-        style={{ height: 140, backgroundColor: "#fff", border: "1.5px dashed " + C.line }}
-        onPointerDown={start} onPointerMove={move} onPointerUp={end} onPointerLeave={end}
-      />
-      <button type="button" onClick={clear} className="text-xs mt-2 px-3 py-1 rounded" style={{ border: "1px solid " + C.line, color: C.inkSoft }}>Clear signature</button>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// AuditRunner — the full on-site, tablet-friendly structured audit flow
-// ---------------------------------------------------------------------------
-function AuditRunner({ client, templateKey, onCancel, onSubmit }) {
-  const tpl = AUDIT_TEMPLATES[templateKey];
-  const [screen, setScreen] = useState("header"); // header | sections | summary | sign
-  const [header, setHeader] = useState(() => {
-    const h = {};
-    tpl.headerFields.forEach(f => { h[f.key] = ""; });
-    h.business = client.name;
-    h.address = "";
-    h.auditDate = new Date().toISOString().slice(0, 10);
-    return h;
-  });
-  const [responses, setResponses] = useState({});
-  const [openSection, setOpenSection] = useState(0);
-  const [summary, setSummary] = useState(() => {
-    const s = {};
-    tpl.summaryFields.forEach(f => { s[f.key] = f.type === "number" ? 0 : ""; });
-    return s;
-  });
-  const [corrective, setCorrective] = useState([{ finding: "", action: "", responsible: "", due: "" }]);
-  const [managerName, setManagerName] = useState("");
-  const [managerSig, setManagerSig] = useState(null);
-  const [auditorSig, setAuditorSig] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  const setResponse = (sIdx, iIdx, patch) => {
-    const key = sIdx + "-" + iIdx;
-    setResponses(prev => ({ ...prev, [key]: { ...prev[key], ...patch } }));
-  };
-  const bulkSet = (sIdx, status) => {
-    setResponses(prev => {
-      const next = { ...prev };
-      tpl.sections[sIdx].items.forEach((_, iIdx) => {
-        const key = sIdx + "-" + iIdx;
-        next[key] = { ...next[key], status };
-      });
-      return next;
-    });
-  };
-
-  const totalItems = tpl.sections.reduce((n, s) => n + s.items.length, 0);
-  const answeredCount = Object.values(responses).filter(r => r && r.status).length;
-  const ncCount = Object.values(responses).filter(r => r && (r.status === "NC")).length;
-  const positiveKey = tpl.statusOptions[0]; // "C" or "PASS"
-  const positiveCount = Object.values(responses).filter(r => r && r.status === positiveKey).length;
-  const naCount = Object.values(responses).filter(r => r && r.status === "NA").length;
-  const scorable = totalItems - naCount;
-  const scorePct = scorable > 0 ? Math.round((positiveCount / (scorable || 1)) * 100) : 100;
-
-  const sectionStatus = (sIdx) => {
-    const items = tpl.sections[sIdx].items;
-    const answered = items.filter((_, i) => responses[sIdx + "-" + i]?.status).length;
-    const hasNC = items.some((_, i) => responses[sIdx + "-" + i]?.status === "NC");
-    return { answered, total: items.length, hasNC };
-  };
-
-  const addCorrectiveRow = () => setCorrective(prev => [...prev, { finding: "", action: "", responsible: "", due: "" }]);
-  const updateCorrective = (i, field, val) => setCorrective(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
-
-  const submit = async () => {
-    setSubmitting(true);
-    const grade = tpl.gradeMap[summary.overallResult] || (ncCount > 0 ? "Conditional Pass" : "Pass");
-    await onSubmit({
-      template: templateKey,
-      header,
-      responses,
-      summary,
-      correctiveActions: corrective.filter(r => r.finding || r.action),
-      managerName,
-      managerSignature: managerSig,
-      auditorSignature: auditorSig,
-      score: scorePct,
-      grade,
-      ncItems: Object.entries(responses).filter(([, r]) => r && r.status === "NC").map(([key, r]) => {
-        const [sIdx, iIdx] = key.split("-").map(Number);
-        return { category: tpl.sections[sIdx].title, description: tpl.sections[sIdx].items[iIdx] + (r.notes ? " — " + r.notes : ""), due_date: summary.followUpDate || header.auditDate };
-      }),
-    });
-    setSubmitting(false);
-  };
-
-  return (
-    <div className="fixed inset-0 z-40 overflow-y-auto" style={{ backgroundColor: C.paper }}>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-24">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <p className="text-xs" style={{ color: C.inkSoft }}>{tpl.formTitle}</p>
-            <h2 className="font-serif text-xl" style={{ color: C.ink }}>{client.name}</h2>
-          </div>
-          <button onClick={onCancel} className="text-sm px-3 py-2 rounded" style={{ border: "1px solid " + C.line, color: C.inkSoft }}>Cancel</button>
-        </div>
-
-        {screen === "header" && (
-          <div className="space-y-4">
-            <div className="rounded p-5" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-              <h3 className="font-serif text-lg mb-4" style={{ color: C.ink }}>Audit details</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {tpl.headerFields.map(f => (
-                  <div key={f.key}>
-                    <FieldLabel>{f.label}</FieldLabel>
-                    {f.type === "select" ? (
-                      <select value={header[f.key]} onChange={e => setHeader(h => ({ ...h, [f.key]: e.target.value }))} className={inputCls} style={inputStyle}>
-                        <option value="">—</option>
-                        {f.options.map(o => <option key={o} value={o}>{o}</option>)}
-                      </select>
-                    ) : (
-                      <input type={f.type === "date" ? "date" : "text"} value={header[f.key]} onChange={e => setHeader(h => ({ ...h, [f.key]: e.target.value }))} className={inputCls} style={inputStyle} />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <button onClick={() => setScreen("sections")} className="w-full text-sm font-medium py-3 rounded text-white" style={{ backgroundColor: C.teal }}>Start checklist</button>
-          </div>
-        )}
-
-        {screen === "sections" && (
-          <div className="space-y-4">
-            <div className="sticky top-0 z-10 py-2" style={{ backgroundColor: C.paper }}>
-              <div className="flex items-center justify-between text-xs mb-1" style={{ color: C.inkSoft }}>
-                <span>{answeredCount} / {totalItems} answered</span>
-                {ncCount > 0 && <span style={{ color: C.red }}>{ncCount} non-compliant</span>}
-              </div>
-              <div className="h-2 rounded-full" style={{ backgroundColor: C.line }}>
-                <div className="h-2 rounded-full" style={{ width: (answeredCount / totalItems * 100) + "%", backgroundColor: C.teal }} />
-              </div>
-            </div>
-
-            {tpl.sections.map((section, sIdx) => {
-              const st = sectionStatus(sIdx);
-              const isOpen = openSection === sIdx;
-              return (
-                <div key={sIdx} className="rounded overflow-hidden" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-                  <button onClick={() => setOpenSection(isOpen ? -1 : sIdx)} className="w-full flex items-center justify-between p-4 text-left">
-                    <div className="flex items-center gap-2">
-                      {st.hasNC && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: C.red }} />}
-                      <h4 className="font-serif text-base" style={{ color: C.ink }}>{section.title}</h4>
-                    </div>
-                    <span className="text-xs shrink-0" style={{ color: st.answered === st.total ? C.green : C.inkSoft }}>{st.answered}/{st.total}</span>
-                  </button>
-                  {isOpen && (
-                    <div className="px-4 pb-4">
-                      <div className="flex gap-2 mb-3 flex-wrap">
-                        {tpl.statusOptions.map(opt => (
-                          <button key={opt} onClick={() => bulkSet(sIdx, opt)} className="text-xs px-2.5 py-1 rounded" style={{ border: "1px solid " + C.line, color: C.inkSoft }}>
-                            Mark all {tpl.statusLabels[opt]}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="space-y-3">
-                        {section.items.map((item, iIdx) => {
-                          const r = responses[sIdx + "-" + iIdx] || {};
-                          return (
-                            <div key={iIdx} className="rounded p-3" style={{ backgroundColor: "#fff", border: "1px solid " + C.line }}>
-                              <p className="text-sm mb-2" style={{ color: C.ink }}>{item}</p>
-                              <div className="flex gap-2 flex-wrap mb-2">
-                                {tpl.statusOptions.map(opt => {
-                                  const active = r.status === opt;
-                                  const col = STATUS_COLOR[opt];
-                                  return (
-                                    <button key={opt} onClick={() => setResponse(sIdx, iIdx, { status: opt })}
-                                      className="text-xs font-medium px-3 py-2 rounded"
-                                      style={active ? { backgroundColor: col.fg, color: "#fff" } : { border: "1px solid " + C.line, color: C.inkSoft }}>
-                                      {opt}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                              {(r.status === "NC" || r.status === "OBS" || r.status === "VERIFY") && (
-                                <input placeholder="Notes / corrective action" value={r.notes || ""} onChange={e => setResponse(sIdx, iIdx, { notes: e.target.value })}
-                                  className="w-full text-xs rounded px-2 py-1.5" style={{ border: "1px solid " + C.line, color: C.ink }} />
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-
-            <button onClick={() => setScreen("summary")} className="w-full text-sm font-medium py-3 rounded text-white sticky bottom-4" style={{ backgroundColor: C.teal }}>
-              Continue to summary ({answeredCount}/{totalItems} answered)
-            </button>
-          </div>
-        )}
-
-        {screen === "summary" && (
-          <div className="space-y-4">
-            <div className="rounded p-5" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-              <h3 className="font-serif text-lg mb-1" style={{ color: C.ink }}>Audit summary</h3>
-              <p className="text-sm mb-4" style={{ color: C.inkSoft }}>Score {scorePct}% · {ncCount} non-compliant item{ncCount === 1 ? "" : "s"} found</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {tpl.summaryFields.map(f => (
-                  <div key={f.key} className={f.type === "textarea" ? "sm:col-span-2" : ""}>
-                    <FieldLabel>{f.label}</FieldLabel>
-                    {f.type === "select" ? (
-                      <select value={summary[f.key]} onChange={e => setSummary(s => ({ ...s, [f.key]: e.target.value }))} className={inputCls} style={inputStyle}>
-                        <option value="">—</option>
-                        {f.options.map(o => <option key={o} value={o}>{o}</option>)}
-                      </select>
-                    ) : f.type === "textarea" ? (
-                      <textarea rows={3} value={summary[f.key]} onChange={e => setSummary(s => ({ ...s, [f.key]: e.target.value }))} className={inputCls} style={inputStyle}></textarea>
-                    ) : (
-                      <input type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"} value={summary[f.key]} onChange={e => setSummary(s => ({ ...s, [f.key]: e.target.value }))} className={inputCls} style={inputStyle} />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded p-5" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-              <h3 className="font-serif text-lg mb-3" style={{ color: C.ink }}>{tpl.correctiveLabel}</h3>
-              <div className="space-y-2">
-                {corrective.map((row, i) => (
-                  <div key={i} className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                    {tpl.correctiveCols.map((col, ci) => {
-                      const field = ["finding", "action", "responsible", "due"][ci];
-                      return <input key={ci} placeholder={col} value={row[field]} onChange={e => updateCorrective(i, field, e.target.value)} className="text-sm rounded px-2 py-1.5" style={inputStyle} />;
-                    })}
-                  </div>
-                ))}
-              </div>
-              <button onClick={addCorrectiveRow} className="text-xs mt-3 px-3 py-1.5 rounded" style={{ border: "1px solid " + C.line, color: C.inkSoft }}>+ Add row</button>
-            </div>
-
-            <div className="flex gap-2">
-              <button onClick={() => setScreen("sections")} className="text-sm font-medium px-4 py-3 rounded" style={{ border: "1px solid " + C.line, color: C.ink }}>← Back</button>
-              <button onClick={() => setScreen("sign")} className="flex-1 text-sm font-medium py-3 rounded text-white" style={{ backgroundColor: C.teal }}>Continue to sign-off</button>
-            </div>
-          </div>
-        )}
-
-        {screen === "sign" && (
-          <div className="space-y-4">
-            <div className="rounded p-5" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
-              <h3 className="font-serif text-lg mb-1" style={{ color: C.ink }}>Sign-off</h3>
-              <p className="text-sm mb-4" style={{ color: C.inkSoft }}>Hand the tablet to the manager on duty to sign below.</p>
-
-              <div className="mb-5">
-                <FieldLabel>Manager / Person in Charge name</FieldLabel>
-                <input value={managerName} onChange={e => setManagerName(e.target.value)} className={inputCls + " mb-3"} style={inputStyle} />
-                <FieldLabel>Manager signature</FieldLabel>
-                <SignaturePad onChange={setManagerSig} />
-              </div>
-
-              <div>
-                <FieldLabel>Auditor signature (optional)</FieldLabel>
-                <SignaturePad onChange={setAuditorSig} />
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <button onClick={() => setScreen("summary")} className="text-sm font-medium px-4 py-3 rounded" style={{ border: "1px solid " + C.line, color: C.ink }}>← Back</button>
-              <button disabled={!managerSig || !managerName || submitting} onClick={submit} className="flex-1 text-sm font-medium py-3 rounded text-white" style={{ backgroundColor: managerSig && managerName ? C.teal : C.line }}>
-                {submitting ? "Saving…" : "Sign & save audit"}
-              </button>
-            </div>
-            {(!managerSig || !managerName) && <p className="text-xs" style={{ color: C.inkSoft }}>Manager name and signature are required to save.</p>}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function AdminConsole({ clients, audits, documents, events, resources, selfAudits, onAddClient, onAddAudit, onAddDocument, onAddEvent, onToggleResolved, onCreateClientLogin, onAddResource, onDeleteResource, onPreviewClient, onSubmitAuditRecord }) {
-  const { t, tv, lang } = useLang();
+function AdminConsole({ clients, audits, documents, events, resources, selfAudits, onAddClient, onAddAudit, onAddDocument, onAddEvent, onToggleResolved, onCreateClientLogin, onAddResource, onDeleteResource, onPreviewClient }) {
   const [tab, setTab] = useState("clients");
   const [selectedId, setSelectedId] = useState(null);
   const [clientTab, setClientTab] = useState("overview");
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState(null);
-  const [runningAudit, setRunningAudit] = useState(null);
   const [month, setMonth] = useState(new Date());
 
   useEffect(() => { if (!selectedId && clients.length) setSelectedId(clients[0].id); }, [clients]);
@@ -1506,31 +576,29 @@ function AdminConsole({ clients, audits, documents, events, resources, selfAudit
   const pad = n => String(n).padStart(2, "0");
   const dateStr = d => year + "-" + pad(mo + 1) + "-" + pad(d);
   const eventsFor = d => events.filter(e => e.date === dateStr(d));
-  const weekdayLabels = lang === "es" ? ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"] : ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-  const localeCode = lang === "es" ? "es-ES" : "en-US";
 
   return (
     <div>
       <div className="flex items-center gap-2 mb-6">
-        {[["clients", t("navClients")], ["calendar", t("navCalendar")], ["resources", t("navResources")]].map(([key, label]) => (
+        {[["clients", "Clients"], ["calendar", "Calendar"], ["resources", "Resources"]].map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} className="text-sm font-medium px-4 py-2 rounded"
             style={tab === key ? { backgroundColor: C.teal, color: "#fff" } : { backgroundColor: C.panel, color: C.inkSoft, border: "1px solid " + C.line }}>{label}</button>
         ))}
-        <button onClick={() => setModal({ type: "addClient" })} className="text-sm font-medium px-4 py-2 rounded ml-auto text-white" style={{ backgroundColor: C.ink }}>{t("newClient")}</button>
+        <button onClick={() => setModal({ type: "addClient" })} className="text-sm font-medium px-4 py-2 rounded ml-auto text-white" style={{ backgroundColor: C.ink }}>+ New client</button>
       </div>
 
       {tab === "clients" && (
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
           <div className="rounded" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
             <div className="p-3" style={{ borderBottom: "1px solid " + C.line }}>
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("searchClients")} className="text-sm outline-none w-full rounded px-2 py-1.5" style={{ border: "1px solid " + C.line, color: C.ink }} />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search clients" className="text-sm outline-none w-full rounded px-2 py-1.5" style={{ border: "1px solid " + C.line, color: C.ink }} />
             </div>
-            {filteredClients.length === 0 && <p className="text-sm p-4" style={{ color: C.inkSoft }}>{t("noClientsYet")}</p>}
+            {filteredClients.length === 0 && <p className="text-sm p-4" style={{ color: C.inkSoft }}>No clients yet. Click "+ New client" to add your first one.</p>}
             {filteredClients.map(c => (
               <button key={c.id} onClick={() => { setSelectedId(c.id); setClientTab("overview"); }} className="w-full text-left p-3 flex items-center gap-3"
                 style={{ backgroundColor: c.id === selectedId ? C.tealSoft : "transparent", borderBottom: "1px solid " + C.line }}>
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: statusDot(c.id) }} />
-                <div className="min-w-0"><p className="text-sm font-medium truncate" style={{ color: C.ink }}>{c.name}</p><p className="text-xs truncate" style={{ color: C.inkSoft }}>{tv(c.type)} · {tv(c.package)}</p></div>
+                <div className="min-w-0"><p className="text-sm font-medium truncate" style={{ color: C.ink }}>{c.name}</p><p className="text-xs truncate" style={{ color: C.inkSoft }}>{c.type} · {c.package}</p></div>
               </button>
             ))}
           </div>
@@ -1543,13 +611,13 @@ function AdminConsole({ clients, audits, documents, events, resources, selfAudit
                   <p className="text-xs" style={{ color: C.inkSoft }}>{selected.contact}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <Badge label={tv(selected.package)} fg={C.teal} bg={C.tealSoft} />
-                  <button onClick={() => onPreviewClient(selected.id)} className="text-xs font-medium px-3 py-1.5 rounded" style={{ border: "1px solid " + C.line, color: C.ink }}>{t("previewAsClient")}</button>
+                  <Badge label={selected.package} fg={C.teal} bg={C.tealSoft} />
+                  <button onClick={() => onPreviewClient(selected.id)} className="text-xs font-medium px-3 py-1.5 rounded" style={{ border: "1px solid " + C.line, color: C.ink }}>Preview as client</button>
                 </div>
               </div>
 
               <div className="flex gap-2 mb-4 flex-wrap">
-                {[["overview", t("tabOverview")], ["audits", t("tabAudits")], ["selfaudits", t("tabSelfAudits")], ["documents", t("tabDocuments")], ["access", t("tabAccess")]].map(([key, label]) => (
+                {[["overview", "Overview"], ["audits", "Audits"], ["selfaudits", "Self-Audits"], ["documents", "Documents"], ["access", "Client login"]].map(([key, label]) => (
                   <button key={key} onClick={() => setClientTab(key)} className="text-xs font-medium px-3 py-1.5 rounded"
                     style={clientTab === key ? { backgroundColor: C.ink, color: "#fff" } : { backgroundColor: "#fff", color: C.inkSoft, border: "1px solid " + C.line }}>{label}</button>
                 ))}
@@ -1558,38 +626,34 @@ function AdminConsole({ clients, audits, documents, events, resources, selfAudit
               {clientTab === "overview" && (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="rounded p-3" style={{ backgroundColor: "#fff", border: "1px solid " + C.line }}>
-                    <p className="text-xs mb-1" style={{ color: C.inkSoft }}>{t("lastGrade")}</p>
-                    {clientAudits[0] ? <Badge label={tv(clientAudits[0].grade)} {...gradeColor(clientAudits[0].grade)} /> : <p className="text-sm" style={{ color: C.inkSoft }}>—</p>}
+                    <p className="text-xs mb-1" style={{ color: C.inkSoft }}>Last grade</p>
+                    {clientAudits[0] ? <Badge label={clientAudits[0].grade} {...gradeColor(clientAudits[0].grade)} /> : <p className="text-sm" style={{ color: C.inkSoft }}>—</p>}
                   </div>
                   <div className="rounded p-3" style={{ backgroundColor: "#fff", border: "1px solid " + C.line }}>
-                    <p className="text-xs mb-1" style={{ color: C.inkSoft }}>{t("openItems")}</p>
+                    <p className="text-xs mb-1" style={{ color: C.inkSoft }}>Open items</p>
                     <p className="text-sm font-medium" style={{ color: clientOpenItems.length ? C.amber : C.green }}>{clientOpenItems.length}</p>
                   </div>
                   <div className="rounded p-3" style={{ backgroundColor: "#fff", border: "1px solid " + C.line }}>
-                    <p className="text-xs mb-1" style={{ color: C.inkSoft }}>{t("nextAudit")}</p>
-                    <p className="text-sm font-medium" style={{ color: C.ink }}>{selected.next_audit ? fmt(selected.next_audit) : t("notScheduled")}</p>
+                    <p className="text-xs mb-1" style={{ color: C.inkSoft }}>Next audit</p>
+                    <p className="text-sm font-medium" style={{ color: C.ink }}>{selected.next_audit ? fmt(selected.next_audit) : "Not scheduled"}</p>
                   </div>
                 </div>
               )}
 
               {clientTab === "audits" && (
                 <div>
-                  <div className="flex gap-2 flex-wrap mb-3">
-                    <button onClick={() => setRunningAudit("compliance")} className="text-sm font-medium px-3 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>Perform Compliance Audit</button>
-                    <button onClick={() => setRunningAudit("readiness")} className="text-sm font-medium px-3 py-2 rounded text-white" style={{ backgroundColor: C.ink }}>Perform Readiness Audit</button>
-                    <button onClick={() => setModal({ type: "addAudit", clientId: selected.id })} className="text-sm font-medium px-3 py-2 rounded" style={{ border: "1px solid " + C.line, color: C.inkSoft }}>{t("uploadNewAudit")}</button>
-                  </div>
+                  <button onClick={() => setModal({ type: "addAudit", clientId: selected.id })} className="text-sm font-medium px-3 py-2 rounded text-white mb-3" style={{ backgroundColor: C.teal }}>+ Upload new audit</button>
                   <div className="space-y-2">
                     {clientAudits.map(a => (
                       <div key={a.id} className="rounded p-3" style={{ backgroundColor: "#fff", border: "1px solid " + C.line }}>
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-sm font-medium" style={{ color: C.ink }}>{fmt(a.date)} · {tv(a.type)}</p>
-                          <Badge label={tv(a.grade)} {...gradeColor(a.grade)} />
+                          <p className="text-sm font-medium" style={{ color: C.ink }}>{fmt(a.date)} · {a.type}</p>
+                          <Badge label={a.grade} {...gradeColor(a.grade)} />
                         </div>
                         {(a.findings || []).map(f => (
                           <div key={f.id} className="flex items-center gap-2 text-xs mt-1">
                             <button onClick={() => onToggleResolved(f.id, !f.resolved)}>{f.resolved ? "✓" : "☐"}</button>
-                            <Badge label={tv(f.severity)} {...severityColor(f.severity)} /><span style={{ color: C.ink }}>{f.description}</span>
+                            <Badge label={f.severity} {...severityColor(f.severity)} /><span style={{ color: C.ink }}>{f.description}</span>
                           </div>
                         ))}
                       </div>
@@ -1600,7 +664,7 @@ function AdminConsole({ clients, audits, documents, events, resources, selfAudit
 
               {clientTab === "selfaudits" && (
                 <div className="space-y-2">
-                  {clientSelfAudits.length === 0 && <p className="text-sm" style={{ color: C.inkSoft }}>{t("noSelfAuditsClient")}</p>}
+                  {clientSelfAudits.length === 0 && <p className="text-sm" style={{ color: C.inkSoft }}>No self-audits submitted by this client yet.</p>}
                   {clientSelfAudits.map(sa => {
                     const items = sa.items || []; const total = items.length; const passed = items.filter(i => i.passed).length;
                     const rate = total ? Math.round((passed / total) * 100) : 0;
@@ -1609,13 +673,13 @@ function AdminConsole({ clients, audits, documents, events, resources, selfAudit
                       <div key={sa.id} className="rounded p-3" style={{ backgroundColor: "#fff", border: "1px solid " + C.line }}>
                         <div className="flex items-center justify-between mb-1">
                           <p className="text-sm font-medium" style={{ color: C.ink }}>{fmt(sa.date)}{sa.submitted_by ? " · " + sa.submitted_by : ""}</p>
-                          <Badge label={rate + t("passPct")} fg={rate >= 90 ? C.green : rate >= 70 ? C.amber : C.red} bg={rate >= 90 ? C.greenSoft : rate >= 70 ? C.amberSoft : C.redSoft} />
+                          <Badge label={rate + "% pass"} fg={rate >= 90 ? C.green : rate >= 70 ? C.amber : C.red} bg={rate >= 90 ? C.greenSoft : rate >= 70 ? C.amberSoft : C.redSoft} />
                         </div>
                         {fails.length > 0 && (
                           <div className="mt-2 space-y-1">
                             {fails.map(f => (
                               <div key={f.id} className="text-xs flex items-center gap-2" style={{ color: C.ink }}>
-                                <span style={{ color: C.red }}>✕</span><span>{tv(f.item_text)}</span>
+                                <span style={{ color: C.red }}>✕</span><span>{f.item_text}</span>
                               </div>
                             ))}
                           </div>
@@ -1628,13 +692,13 @@ function AdminConsole({ clients, audits, documents, events, resources, selfAudit
 
               {clientTab === "documents" && (
                 <div>
-                  <button onClick={() => setModal({ type: "addDocument", clientId: selected.id })} className="text-sm font-medium px-3 py-2 rounded text-white mb-3" style={{ backgroundColor: C.teal }}>{t("uploadDocument")}</button>
+                  <button onClick={() => setModal({ type: "addDocument", clientId: selected.id })} className="text-sm font-medium px-3 py-2 rounded text-white mb-3" style={{ backgroundColor: C.teal }}>+ Upload document</button>
                   <div className="space-y-2">
-                    {clientDocs.length === 0 && <p className="text-sm" style={{ color: C.inkSoft }}>{t("noDocumentsYet")}</p>}
+                    {clientDocs.length === 0 && <p className="text-sm" style={{ color: C.inkSoft }}>No documents yet.</p>}
                     {clientDocs.map(d => (
                       <div key={d.id} className="rounded p-3" style={{ backgroundColor: "#fff", border: "1px solid " + C.line }}>
                         <p className="text-sm" style={{ color: C.ink }}>{d.name}</p>
-                        <p className="text-xs" style={{ color: C.inkSoft }}>{tv(d.type)} · {t("addedOn")} {fmt(d.date)}</p>
+                        <p className="text-xs" style={{ color: C.inkSoft }}>{d.type} · added {fmt(d.date)}</p>
                       </div>
                     ))}
                   </div>
@@ -1652,14 +716,14 @@ function AdminConsole({ clients, audits, documents, events, resources, selfAudit
       {tab === "calendar" && (
         <div className="rounded p-5" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-serif text-lg" style={{ color: C.ink }}>{month.toLocaleDateString(localeCode, { month: "long", year: "numeric" })}</h3>
+            <h3 className="font-serif text-lg" style={{ color: C.ink }}>{month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</h3>
             <div className="flex gap-2">
               <button onClick={() => setMonth(new Date(year, mo - 1, 1))} className="p-1.5 rounded" style={{ border: "1px solid " + C.line }}>‹</button>
               <button onClick={() => setMonth(new Date(year, mo + 1, 1))} className="p-1.5 rounded" style={{ border: "1px solid " + C.line }}>›</button>
             </div>
           </div>
           <div className="grid grid-cols-7 gap-px text-xs mb-1" style={{ color: C.inkSoft }}>
-            {weekdayLabels.map(d => <div key={d} className="text-center py-1">{d}</div>)}
+            {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => <div key={d} className="text-center py-1">{d}</div>)}
           </div>
           <div className="grid grid-cols-7 gap-1">
             {cells.map((d, i) => (
@@ -1684,21 +748,21 @@ function AdminConsole({ clients, audits, documents, events, resources, selfAudit
       {tab === "resources" && (
         <div className="rounded p-5" style={{ backgroundColor: C.panel, border: "1px solid " + C.line }}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-serif text-lg" style={{ color: C.ink }}>{t("educationFormsLibrary")}</h3>
-            <button onClick={() => setModal({ type: "addResource" })} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>{t("addResource")}</button>
+            <h3 className="font-serif text-lg" style={{ color: C.ink }}>Education & Forms library</h3>
+            <button onClick={() => setModal({ type: "addResource" })} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>+ Add resource</button>
           </div>
-          {[["education", t("navEducation")], ["forms", t("navForms")]].map(([sec, label]) => (
+          {[["education", "Education"], ["forms", "Forms"]].map(([sec, label]) => (
             <div key={sec} className="mb-6">
               <p className="text-xs uppercase tracking-[0.15em] mb-2" style={{ color: C.inkSoft }}>{label}</p>
               <div className="space-y-2">
-                {resources.filter(r => r.section === sec).length === 0 && <p className="text-sm" style={{ color: C.inkSoft }}>{t("nothingAddedYet")}</p>}
+                {resources.filter(r => r.section === sec).length === 0 && <p className="text-sm" style={{ color: C.inkSoft }}>Nothing added yet.</p>}
                 {resources.filter(r => r.section === sec).map(r => (
                   <div key={r.id} className="flex items-center justify-between gap-3 rounded p-3" style={{ backgroundColor: "#fff", border: "1px solid " + C.line }}>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate" style={{ color: C.ink }}>{r.title} <span className="text-xs font-normal" style={{ color: C.inkSoft }}>· {tv(r.kind)}</span></p>
+                      <p className="text-sm font-medium truncate" style={{ color: C.ink }}>{r.title} <span className="text-xs font-normal" style={{ color: C.inkSoft }}>· {r.kind}</span></p>
                       {r.description && <p className="text-xs truncate" style={{ color: C.inkSoft }}>{r.description}</p>}
                     </div>
-                    <button onClick={() => onDeleteResource(r.id)} className="text-xs px-2 py-1 rounded shrink-0" style={{ border: "1px solid " + C.line, color: C.inkSoft }}>{t("remove")}</button>
+                    <button onClick={() => onDeleteResource(r.id)} className="text-xs px-2 py-1 rounded shrink-0" style={{ border: "1px solid " + C.line, color: C.inkSoft }}>Remove</button>
                   </div>
                 ))}
               </div>
@@ -1712,82 +776,65 @@ function AdminConsole({ clients, audits, documents, events, resources, selfAudit
       {modal?.type === "addAudit" && <AddAuditModal onClose={() => setModal(null)} onSubmit={p => { onAddAudit(modal.clientId, p); setModal(null); }} />}
       {modal?.type === "addDocument" && <AddDocumentModal onClose={() => setModal(null)} onSubmit={p => { onAddDocument(modal.clientId, p); setModal(null); }} />}
       {modal?.type === "schedule" && <ScheduleModal date={modal.date} clients={clients} onClose={() => setModal(null)} onSubmit={p => { onAddEvent(p); setModal(null); }} />}
-
-      {runningAudit && selected && (
-        <AuditRunner
-          client={selected}
-          templateKey={runningAudit}
-          onCancel={() => setRunningAudit(null)}
-          onSubmit={async (payload) => { await onSubmitAuditRecord(selected.id, payload); setRunningAudit(null); }}
-        />
-      )}
     </div>
   );
 }
 
 function ClientLoginPanel({ client, onCreateClientLogin }) {
-  const { t } = useLang();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
   const submit = async () => {
-    setStatus(t("creating"));
+    setStatus("Creating…");
     const res = await onCreateClientLogin(client.id, email, password, client.name);
-    setStatus(res.error ? t("errorPrefix") + " " + res.error : t("loginCreated"));
+    setStatus(res.error ? "Error: " + res.error : "Login created. Share these credentials with the client.");
   };
   return (
     <div className="max-w-sm">
-      <p className="text-sm mb-3" style={{ color: C.inkSoft }}>{t("createLoginDesc").replace("{name}", client.name)}</p>
-      <div className="mb-3"><FieldLabel>{t("clientEmail")}</FieldLabel><input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputCls} style={inputStyle} /></div>
-      <div className="mb-3"><FieldLabel>{t("tempPassword")}</FieldLabel><input value={password} onChange={e => setPassword(e.target.value)} className={inputCls} style={inputStyle} /></div>
-      <button onClick={submit} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>{t("createLogin")}</button>
+      <p className="text-sm mb-3" style={{ color: C.inkSoft }}>Create a login so {client.name} can access their own portal.</p>
+      <div className="mb-3"><FieldLabel>Client email</FieldLabel><input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputCls} style={inputStyle} /></div>
+      <div className="mb-3"><FieldLabel>Temporary password</FieldLabel><input value={password} onChange={e => setPassword(e.target.value)} className={inputCls} style={inputStyle} /></div>
+      <button onClick={submit} className="text-sm font-medium px-4 py-2 rounded text-white" style={{ backgroundColor: C.teal }}>Create login</button>
       {status && <p className="text-sm mt-2" style={{ color: C.inkSoft }}>{status}</p>}
     </div>
   );
 }
 
 function AddResourceModal({ onClose, onSubmit }) {
-  const { t, tv } = useLang();
   const [title, setTitle] = useState(""); const [description, setDescription] = useState("");
   const [section, setSection] = useState("education"); const [kind, setKind] = useState("document"); const [url, setUrl] = useState("");
   return (
-    <Modal title={t("addResourceTitle")} onClose={onClose}>
-      <div className="mb-3"><FieldLabel>{t("title")}</FieldLabel><input value={title} onChange={e => setTitle(e.target.value)} className={inputCls} style={inputStyle} /></div>
-      <div className="mb-3"><FieldLabel>{t("descriptionOptional")}</FieldLabel><input value={description} onChange={e => setDescription(e.target.value)} className={inputCls} style={inputStyle} /></div>
+    <Modal title="Add resource" onClose={onClose}>
+      <div className="mb-3"><FieldLabel>Title</FieldLabel><input value={title} onChange={e => setTitle(e.target.value)} className={inputCls} style={inputStyle} /></div>
+      <div className="mb-3"><FieldLabel>Description (optional)</FieldLabel><input value={description} onChange={e => setDescription(e.target.value)} className={inputCls} style={inputStyle} /></div>
       <div className="grid grid-cols-2 gap-3 mb-3">
-        <div><FieldLabel>{t("area")}</FieldLabel><select value={section} onChange={e => setSection(e.target.value)} className={inputCls} style={inputStyle}><option value="education">{t("navEducation")}</option><option value="forms">{t("navForms")}</option></select></div>
-        <div><FieldLabel>{t("type")}</FieldLabel><select value={kind} onChange={e => setKind(e.target.value)} className={inputCls} style={inputStyle}><option value="document">{tv("Document")}</option><option value="video">{tv("Video")}</option></select></div>
+        <div><FieldLabel>Area</FieldLabel><select value={section} onChange={e => setSection(e.target.value)} className={inputCls} style={inputStyle}><option value="education">Education</option><option value="forms">Forms</option></select></div>
+        <div><FieldLabel>Type</FieldLabel><select value={kind} onChange={e => setKind(e.target.value)} className={inputCls} style={inputStyle}><option value="document">Document</option><option value="video">Video</option></select></div>
       </div>
-      <div className="mb-4"><FieldLabel>{t("linkField")}</FieldLabel><input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://…" className={inputCls} style={inputStyle} /></div>
-      <button onClick={() => title && url && onSubmit({ title, description, section, kind, url })} className="w-full text-sm font-medium py-2 rounded text-white" style={{ backgroundColor: C.teal }}>{t("saveResource")}</button>
+      <div className="mb-4"><FieldLabel>Link (video URL, or link to the document/template)</FieldLabel><input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://…" className={inputCls} style={inputStyle} /></div>
+      <button onClick={() => title && url && onSubmit({ title, description, section, kind, url })} className="w-full text-sm font-medium py-2 rounded text-white" style={{ backgroundColor: C.teal }}>Save resource</button>
     </Modal>
   );
 }
 
 function AddClientModal({ onClose, onSubmit }) {
-  const { t, tv } = useLang();
   const [name, setName] = useState(""); const [type, setType] = useState("Restaurant");
   const [pkg, setPkg] = useState("Basic"); const [contact, setContact] = useState(""); const [nextAudit, setNextAudit] = useState("");
   return (
-    <Modal title={t("addNewClient")} onClose={onClose}>
-      <div className="mb-3"><FieldLabel>{t("businessName")}</FieldLabel><input value={name} onChange={e => setName(e.target.value)} className={inputCls} style={inputStyle} /></div>
+    <Modal title="Add new client" onClose={onClose}>
+      <div className="mb-3"><FieldLabel>Business name</FieldLabel><input value={name} onChange={e => setName(e.target.value)} className={inputCls} style={inputStyle} /></div>
       <div className="grid grid-cols-2 gap-3 mb-3">
-        <div><FieldLabel>{t("type")}</FieldLabel><select value={type} onChange={e => setType(e.target.value)} className={inputCls} style={inputStyle}>
-          {["Restaurant","Food Truck","Bakery","Catering","Other"].map(v => <option key={v} value={v}>{tv(v)}</option>)}
-        </select></div>
-        <div><FieldLabel>{t("package")}</FieldLabel><select value={pkg} onChange={e => setPkg(e.target.value)} className={inputCls} style={inputStyle}>
-          {["Basic","Pro","Enterprise"].map(v => <option key={v} value={v}>{tv(v)}</option>)}
-        </select></div>
+        <div><FieldLabel>Type</FieldLabel><select value={type} onChange={e => setType(e.target.value)} className={inputCls} style={inputStyle}><option>Restaurant</option><option>Food Truck</option><option>Bakery</option><option>Catering</option><option>Other</option></select></div>
+        <div><FieldLabel>Package</FieldLabel><select value={pkg} onChange={e => setPkg(e.target.value)} className={inputCls} style={inputStyle}><option>Basic</option><option>Pro</option><option>Enterprise</option></select></div>
       </div>
-      <div className="mb-3"><FieldLabel>{t("contactField")}</FieldLabel><input value={contact} onChange={e => setContact(e.target.value)} className={inputCls} style={inputStyle} /></div>
-      <div className="mb-4"><FieldLabel>{t("nextAuditOptional")}</FieldLabel><input type="date" value={nextAudit} onChange={e => setNextAudit(e.target.value)} className={inputCls} style={inputStyle} /></div>
-      <button onClick={() => name && onSubmit({ name, type, package: pkg, contact, next_audit: nextAudit || null })} className="w-full text-sm font-medium py-2 rounded text-white" style={{ backgroundColor: C.teal }}>{t("saveClient")}</button>
+      <div className="mb-3"><FieldLabel>Contact (name · email)</FieldLabel><input value={contact} onChange={e => setContact(e.target.value)} className={inputCls} style={inputStyle} /></div>
+      <div className="mb-4"><FieldLabel>Next audit date (optional)</FieldLabel><input type="date" value={nextAudit} onChange={e => setNextAudit(e.target.value)} className={inputCls} style={inputStyle} /></div>
+      <button onClick={() => name && onSubmit({ name, type, package: pkg, contact, next_audit: nextAudit || null })} className="w-full text-sm font-medium py-2 rounded text-white" style={{ backgroundColor: C.teal }}>Save client</button>
     </Modal>
   );
 }
 
 function AddAuditModal({ onClose, onSubmit }) {
-  const { t, tv } = useLang();
   const [date, setDate] = useState(""); const [type, setType] = useState("Routine");
   const [score, setScore] = useState(""); const [grade, setGrade] = useState("Pass");
   const [findingsText, setFindingsText] = useState(""); const [severity, setSeverity] = useState("Minor"); const [dueDate, setDueDate] = useState("");
@@ -1797,65 +844,54 @@ function AddAuditModal({ onClose, onSubmit }) {
     onSubmit({ date, type, score: Number(score) || 0, grade, findings });
   };
   return (
-    <Modal title={t("uploadNewAuditTitle")} onClose={onClose} wide>
+    <Modal title="Upload new audit" onClose={onClose} wide>
       <div className="grid grid-cols-2 gap-3 mb-3">
-        <div><FieldLabel>{t("date")}</FieldLabel><input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls} style={inputStyle} /></div>
-        <div><FieldLabel>{t("type")}</FieldLabel><select value={type} onChange={e => setType(e.target.value)} className={inputCls} style={inputStyle}>
-          {["Routine","Follow-up","Complaint response"].map(v => <option key={v} value={v}>{tv(v)}</option>)}
-        </select></div>
-        <div><FieldLabel>{t("score")}</FieldLabel><input type="number" value={score} onChange={e => setScore(e.target.value)} className={inputCls} style={inputStyle} /></div>
-        <div><FieldLabel>Grade</FieldLabel><select value={grade} onChange={e => setGrade(e.target.value)} className={inputCls} style={inputStyle}>
-          {["Pass","Conditional Pass","Fail"].map(v => <option key={v} value={v}>{tv(v)}</option>)}
-        </select></div>
+        <div><FieldLabel>Date</FieldLabel><input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls} style={inputStyle} /></div>
+        <div><FieldLabel>Type</FieldLabel><select value={type} onChange={e => setType(e.target.value)} className={inputCls} style={inputStyle}><option>Routine</option><option>Follow-up</option><option>Complaint response</option></select></div>
+        <div><FieldLabel>Score</FieldLabel><input type="number" value={score} onChange={e => setScore(e.target.value)} className={inputCls} style={inputStyle} /></div>
+        <div><FieldLabel>Grade</FieldLabel><select value={grade} onChange={e => setGrade(e.target.value)} className={inputCls} style={inputStyle}><option>Pass</option><option>Conditional Pass</option><option>Fail</option></select></div>
       </div>
-      <FieldLabel>{t("findingsLabel")}</FieldLabel>
+      <FieldLabel>Findings (one per line, leave blank if none)</FieldLabel>
       <textarea value={findingsText} onChange={e => setFindingsText(e.target.value)} rows={4} className={inputCls + " mb-3"} style={inputStyle}></textarea>
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div><FieldLabel>{t("findingsSeverity")}</FieldLabel><select value={severity} onChange={e => setSeverity(e.target.value)} className={inputCls} style={inputStyle}>
-          {["Minor","Major","Critical"].map(v => <option key={v} value={v}>{tv(v)}</option>)}
-        </select></div>
-        <div><FieldLabel>{t("findingsDueDate")}</FieldLabel><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className={inputCls} style={inputStyle} /></div>
+        <div><FieldLabel>Findings severity</FieldLabel><select value={severity} onChange={e => setSeverity(e.target.value)} className={inputCls} style={inputStyle}><option>Minor</option><option>Major</option><option>Critical</option></select></div>
+        <div><FieldLabel>Findings due date</FieldLabel><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className={inputCls} style={inputStyle} /></div>
       </div>
-      <button onClick={submit} className="w-full text-sm font-medium py-2 rounded text-white" style={{ backgroundColor: C.teal }}>{t("saveAudit")}</button>
+      <button onClick={submit} className="w-full text-sm font-medium py-2 rounded text-white" style={{ backgroundColor: C.teal }}>Save audit</button>
     </Modal>
   );
 }
 
 function AddDocumentModal({ onClose, onSubmit }) {
-  const { t, tv } = useLang();
   const [name, setName] = useState(""); const [type, setType] = useState("Certificate");
   return (
-    <Modal title={t("uploadDocumentTitle")} onClose={onClose}>
-      <div className="mb-3"><FieldLabel>{t("documentName")}</FieldLabel><input value={name} onChange={e => setName(e.target.value)} className={inputCls} style={inputStyle} /></div>
-      <div className="mb-4"><FieldLabel>{t("type")}</FieldLabel><select value={type} onChange={e => setType(e.target.value)} className={inputCls} style={inputStyle}>
-        {["Certificate","Permit","Report","Log","Other"].map(v => <option key={v} value={v}>{tv(v)}</option>)}
-      </select></div>
-      <button onClick={() => name && onSubmit({ name, type, date: new Date().toISOString().slice(0, 10) })} className="w-full text-sm font-medium py-2 rounded text-white" style={{ backgroundColor: C.teal }}>{t("saveDocument")}</button>
+    <Modal title="Upload document" onClose={onClose}>
+      <div className="mb-3"><FieldLabel>Document name</FieldLabel><input value={name} onChange={e => setName(e.target.value)} className={inputCls} style={inputStyle} /></div>
+      <div className="mb-4"><FieldLabel>Type</FieldLabel><select value={type} onChange={e => setType(e.target.value)} className={inputCls} style={inputStyle}><option>Certificate</option><option>Permit</option><option>Report</option><option>Log</option><option>Other</option></select></div>
+      <button onClick={() => name && onSubmit({ name, type, date: new Date().toISOString().slice(0, 10) })} className="w-full text-sm font-medium py-2 rounded text-white" style={{ backgroundColor: C.teal }}>Save document</button>
     </Modal>
   );
 }
 
 function ScheduleModal({ date, clients, onClose, onSubmit }) {
-  const { t } = useLang();
   const [clientId, setClientId] = useState(clients[0]?.id || ""); const [note, setNote] = useState("Routine audit");
   return (
-    <Modal title={t("scheduleAudit") + " " + fmt(date)} onClose={onClose}>
-      <div className="mb-3"><FieldLabel>{t("client_")}</FieldLabel>
+    <Modal title={"Schedule audit — " + fmt(date)} onClose={onClose}>
+      <div className="mb-3"><FieldLabel>Client</FieldLabel>
         <select value={clientId} onChange={e => setClientId(e.target.value)} className={inputCls} style={inputStyle}>
           {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </div>
-      <div className="mb-4"><FieldLabel>{t("note")}</FieldLabel><input value={note} onChange={e => setNote(e.target.value)} className={inputCls} style={inputStyle} /></div>
-      <button onClick={() => clientId && onSubmit({ date, client_id: clientId, note })} className="w-full text-sm font-medium py-2 rounded text-white" style={{ backgroundColor: C.teal }}>{t("addToCalendar")}</button>
+      <div className="mb-4"><FieldLabel>Note</FieldLabel><input value={note} onChange={e => setNote(e.target.value)} className={inputCls} style={inputStyle} /></div>
+      <button onClick={() => clientId && onSubmit({ date, client_id: clientId, note })} className="w-full text-sm font-medium py-2 rounded text-white" style={{ backgroundColor: C.teal }}>Add to calendar</button>
     </Modal>
   );
 }
 
-
 // ---------------------------------------------------------------------------
 // App shell
 // ---------------------------------------------------------------------------
-function AppInner() {
+function App() {
   const [session, setSession] = useState(undefined); // undefined = loading, null = signed out
   const [profile, setProfile] = useState(null);
   const [previewClientId, setPreviewClientId] = useState(null);
@@ -1865,7 +901,6 @@ function AppInner() {
   const [events, setEvents] = useState([]);
   const [resources, setResources] = useState([]);
   const [selfAudits, setSelfAudits] = useState([]);
-  const { t } = useLang();
 
   useEffect(() => {
     sb.auth.getSession().then(({ data }) => setSession(data.session));
@@ -1895,7 +930,7 @@ function AppInner() {
 
   if (session === undefined) return null;
   if (!session) return <Login />;
-  if (!profile) return <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.paper, color: C.inkSoft }}>{t("loadingAccount")}</div>;
+  if (!profile) return <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.paper, color: C.inkSoft }}>Loading your account…</div>;
 
   const toggleResolved = async (findingId, resolved) => {
     await sb.from("findings").update({ resolved }).eq("id", findingId);
@@ -1916,36 +951,6 @@ function AppInner() {
     const { items, ...fields } = payload;
     const { data: sa } = await sb.from("self_audits").insert({ ...fields, client_id: clientId }).select().single();
     if (sa && items.length) await sb.from("self_audit_items").insert(items.map(i => ({ ...i, self_audit_id: sa.id })));
-    refreshAll();
-  };
-  const submitAuditRecord = async (clientId, payload) => {
-    // Create a matching summary row in `audits`/`findings` so the client dashboard,
-    // audit history, and "things to do" list all pick this up automatically.
-    const { data: audit } = await sb.from("audits").insert({
-      client_id: clientId,
-      date: payload.header.auditDate || new Date().toISOString().slice(0, 10),
-      type: payload.template === "readiness" ? "Follow-up" : "Routine",
-      score: payload.score,
-      grade: payload.grade,
-    }).select().single();
-    if (audit && payload.ncItems.length) {
-      await sb.from("findings").insert(payload.ncItems.map(f => ({ ...f, audit_id: audit.id, severity: "Major", resolved: false })));
-    }
-    await sb.from("audit_records").insert({
-      client_id: clientId,
-      template: payload.template,
-      header: payload.header,
-      responses: payload.responses,
-      summary: payload.summary,
-      corrective_actions: payload.correctiveActions,
-      auditor_signature: payload.auditorSignature,
-      manager_signature: payload.managerSignature,
-      manager_name: payload.managerName,
-      score: payload.score,
-      grade: payload.grade,
-      linked_audit_id: audit ? audit.id : null,
-      signed_at: new Date().toISOString(),
-    });
     refreshAll();
   };
   const createClientLogin = async (clientId, email, password, fullName) => {
@@ -1984,25 +989,12 @@ function AppInner() {
             onAddClient={addClient} onAddAudit={addAudit} onAddDocument={addDocument}
             onAddEvent={addEvent} onToggleResolved={toggleResolved} onCreateClientLogin={createClientLogin}
             onAddResource={addResource} onDeleteResource={deleteResource} onPreviewClient={setPreviewClientId}
-            onSubmitAuditRecord={submitAuditRecord}
           />
         ) : (
           <ClientPortal client={myClient} audits={myAudits} selfAudits={mySelfAudits} resources={resources} onToggleResolved={toggleResolved} onSubmitSelfAudit={submitSelfAudit} />
         )}
       </div>
     </div>
-  );
-}
-
-function App() {
-  const [lang, setLang] = useState(localStorage.getItem("fc_lang") || "en");
-  useEffect(() => { localStorage.setItem("fc_lang", lang); }, [lang]);
-  const t = (key) => (UI[key] && UI[key][lang]) || (UI[key] && UI[key].en) || key;
-  const tv = (str) => (lang === "es" && VALS[str]) ? VALS[str] : str;
-  return (
-    <LangContext.Provider value={{ lang, setLang, t, tv }}>
-      <AppInner />
-    </LangContext.Provider>
   );
 }
 
